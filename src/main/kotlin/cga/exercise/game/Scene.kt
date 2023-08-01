@@ -26,6 +26,8 @@ class Scene(private val window: GameWindow) {
     private val ground: Renderable
     private val bike: Renderable
 
+    private val baum: Renderable
+
     private val groundMaterial: Material
     private val groundColor: Vector3f
 
@@ -45,11 +47,11 @@ class Scene(private val window: GameWindow) {
     //scene setup
     init {
         //load textures
-        val groundDiff = Texture2D("assets/textures/ground_diff.png", true)
+        val groundDiff = Texture2D("assets/textures/grass3.jpg", true)
         groundDiff.setTexParams(GL_REPEAT, GL_REPEAT, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR)
-        val groundSpecular = Texture2D("assets/textures/ground_spec.png", true)
+        val groundSpecular = Texture2D("assets/textures/grass3.jpg", true)
         groundSpecular.setTexParams(GL_REPEAT, GL_REPEAT, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR)
-        val groundEmit = Texture2D("assets/textures/ground_emit.png", true)
+        val groundEmit = Texture2D("assets/textures/grass3.jpg", true)
         groundEmit.setTexParams(GL_REPEAT, GL_REPEAT, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR)
         groundMaterial = Material(groundDiff, groundEmit, groundSpecular, 60f, Vector2f(64.0f, 64.0f))
 
@@ -70,6 +72,8 @@ class Scene(private val window: GameWindow) {
         bike = loadModel("assets/Light Cycle/Light Cycle/HQ_Movie cycle.obj", Math.toRadians(-90.0f), Math.toRadians(90.0f), 0.0f) ?: throw IllegalArgumentException("Could not load the model")
         bike.scale(Vector3f(0.8f, 0.8f, 0.8f))
 
+        baum = loadModel("assets/models/Baum/Baum.obj",)?: throw IllegalArgumentException("Could not load the model")
+
         //setup camera
         camera = TronCamera(
                 custom(window.framebufferWidth, window.framebufferHeight),
@@ -81,7 +85,7 @@ class Scene(private val window: GameWindow) {
         camera.rotate(Math.toRadians(-35.0f), 0.0f, 0.0f)
         camera.translate(Vector3f(0.0f, 0.0f, 4.0f))
 
-        groundColor = Vector3f(0.0f, 1.0f, 0.0f)
+        groundColor = Vector3f(1.0f, 1.0f, 1.0f)
 
         //bike point light
         bikePointLight = PointLight("pointLight[${pointLightList.size}]", Vector3f(0.0f, 2.0f, 0.0f), Vector3f(0.0f, 0.5f, 0.0f))
@@ -131,8 +135,8 @@ class Scene(private val window: GameWindow) {
         // render objects
         staticShader.setUniform("shadingColor", groundColor)
         ground.render(staticShader)
-        staticShader.setUniform("shadingColor", changingColor)
         bike.render(staticShader)
+        baum.render(staticShader)
     }
 
     fun update(dt: Float, t: Float) {
