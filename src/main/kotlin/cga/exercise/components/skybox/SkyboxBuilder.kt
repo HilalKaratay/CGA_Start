@@ -1,6 +1,7 @@
 
 @file:JvmName("SkyboxBuilder")
 
+/*
 import cga.exercise.components.skybox.Skybox
 import cga.exercise.components.texture.Texture2D
 
@@ -14,4 +15,4 @@ fun createNightSkybox(): Skybox {
     return Skybox(texture, texture, texture, texture, texture, texture)
 }
 
-
+*/

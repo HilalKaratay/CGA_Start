@@ -24,9 +24,19 @@ class Scene(private val window: GameWindow) {
     private val staticShader: ShaderProgram = ShaderProgram("assets/shaders/tron_vert.glsl", "assets/shaders/tron_frag.glsl")
 
     private val ground: Renderable
-    private val figur: Renderable
 
+
+    //Modell
+    private val figur: Renderable
     private val baum: Renderable
+    private val baum2: Renderable
+    private val blume: Renderable
+    private val laterne: Renderable
+    private val stein: Renderable
+    private val stein2: Renderable
+    private val brücke: Renderable
+    private val haus: Renderable
+    private val gras: Renderable
 
     private val groundMaterial: Material
     private val groundColor: Vector3f
@@ -47,8 +57,13 @@ class Scene(private val window: GameWindow) {
     private var oldMouseY = 0.0
     private var firstMouseMove = true
 
+
+
+
     //scene setup
     init {
+
+
         //load textures
         val groundDiff = Texture2D("assets/textures/grass3.jpg", true)
         groundDiff.setTexParams(GL_REPEAT, GL_REPEAT, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR)
@@ -66,17 +81,36 @@ class Scene(private val window: GameWindow) {
         val atr2 = VertexAttribute(2, GL_FLOAT, stride, 3 * 4) //texture coordinate attribute
         val atr3 = VertexAttribute(3, GL_FLOAT, stride, 5 * 4) //normal attribute
         val vertexAttributes = arrayOf(atr1, atr2, atr3)
+
         //Create renderable
         ground = Renderable()
         for (m in gres.objects[0].meshes) {
             val mesh = Mesh(m.vertexData, m.indexData, vertexAttributes, groundMaterial)
             ground.meshes.add(mesh)
         }
-        figur = loadModel("assets/models/figur.obj", Math.toRadians(0.0f), Math.toRadians(0.0f), 0.0f) ?: throw IllegalArgumentException("Could not load the model")
-        figur.scale(Vector3f(0.8f, 0.8f, 0.8f))
 
+
+        /** Modelle **/
+        figur = loadModel("assets/models/figur.obj", Math.toRadians(0.0f), Math.toRadians(0.0f), 0.0f) ?: throw IllegalArgumentException("Could not load the model")
+        //figur.scale(Vector3f(0.8f, 0.8f, 0.8f))
 
         baum = loadModel("assets/models/Baum/Baum.obj" ,Math.toRadians(-90.0f), Math.toRadians(90.0f), 0.0f)?: throw IllegalArgumentException("Could not load the model")
+        baum.translate(Vector3f(7f, 0f, 0f))
+        blume = loadModel("assets/models/Blume/blume.obj" ,Math.toRadians(-90.0f), Math.toRadians(90.0f), 0.0f)?: throw IllegalArgumentException("Could not load the model")
+        baum2 = loadModel("assets/models/Baum_2/baum_2.obj" ,Math.toRadians(-0.0f), Math.toRadians(0.0f), 0.0f)?: throw IllegalArgumentException("Could not load the model")
+        baum2.translate(Vector3f(-10f, 0f, 0f))
+        laterne = loadModel("assets/models/Laterne/Laterne.obj" ,Math.toRadians(0.0f), Math.toRadians(0.0f), 0.0f)?: throw IllegalArgumentException("Could not load the model")
+        laterne.translate(Vector3f(13f, 0f, 0f))
+        stein = loadModel("assets/models/Stein/stein.obj" ,Math.toRadians(0.0f), Math.toRadians(0.0f), 0.0f)?: throw IllegalArgumentException("Could not load the model")
+        stein.translate(Vector3f(6f, 0f, 0f))
+        stein2 = loadModel("assets/models/Stein2/stein2.obj" ,Math.toRadians(0.0f), Math.toRadians(0.0f), 0.0f)?: throw IllegalArgumentException("Could not load the model")
+        stein2.translate(Vector3f(-8f, 0f, 0f))
+        brücke = loadModel("assets/models/Brücke/Brücke.obj" ,Math.toRadians(0.0f), Math.toRadians(0.0f), 0.0f)?: throw IllegalArgumentException("Could not load the model")
+        brücke.translate(Vector3f(-4f, 0f, 0f))
+        haus = loadModel("assets/models/Haus/Haus.obj" ,Math.toRadians(0.0f), Math.toRadians(0.0f), 0.0f)?: throw IllegalArgumentException("Could not load the model")
+        haus.translate(Vector3f(0f, 0f, 0f))
+        gras = loadModel("assets/models/Gras/Gras.obj" ,Math.toRadians(0.0f), Math.toRadians(0.0f), 0.0f)?: throw IllegalArgumentException("Could not load the model")
+        gras.translate(Vector3f(5f, 0f, 0f))
 
         //setup camera
         camera = TronCamera(
@@ -127,13 +161,13 @@ class Scene(private val window: GameWindow) {
         bikePointLight.lightColor = changingColor
 
         // bind lights
-        for (pointLight in pointLightList) {
+        /*for (pointLight in pointLightList) {
             pointLight.bind(staticShader)
         }
         staticShader.setUniform("numPointLights", pointLightList.size)
         for (spotLight in spotLightList) {
             spotLight.bind(staticShader, camera.calculateViewMatrix())
-        }
+        }*/
         staticShader.setUniform("numSpotLights", spotLightList.size)
 
         // render objects
@@ -142,10 +176,18 @@ class Scene(private val window: GameWindow) {
         staticShader.setUniform("shadingColor",changingColor)
         figur.render(staticShader)
         baum.render(staticShader)
+        baum2.render(staticShader)
+        blume.render(staticShader)
+        laterne.render(staticShader)
+        stein.render(staticShader)
+        stein2.render(staticShader)
+        brücke.render(staticShader)
+        haus.render(staticShader)
+        gras.render(staticShader)
     }
 
     fun update(dt: Float, t: Float) {
-        val moveMul = 5.0f
+       /* val moveMul = 5.0f
         val rotateMul = 0.5f * Math.PI.toFloat()
         if (window.getKeyState(GLFW_KEY_W)) {
             figur.translate(Vector3f(0.0f, 0.0f, -dt * moveMul))
@@ -153,12 +195,24 @@ class Scene(private val window: GameWindow) {
         if (window.getKeyState(GLFW_KEY_S)) {
             figur.translate(Vector3f(0.0f, 0.0f, dt * moveMul))
         }
-        if (window.getKeyState(GLFW_KEY_A) and window.getKeyState(GLFW_KEY_W)) {
+        if (window.getKeyState(GLFW_KEY_A) ) {
             figur.rotate(0.0f, dt * rotateMul, 0.0f)
         }
-        if (window.getKeyState(GLFW_KEY_D) and window.getKeyState(GLFW_KEY_W)) {
+        if (window.getKeyState(GLFW_KEY_D) ) {
             figur.rotate(0.0f, -dt * rotateMul, 0.0f)
-        }
+        }*/
+
+        if (window.getKeyState(org.lwjgl.glfw.GLFW.GLFW_KEY_W))
+            figur.translate(Vector3f(0.0f, 0.0f, -100.0f*dt))
+        if (window.getKeyState(org.lwjgl.glfw.GLFW.GLFW_KEY_S))
+            figur.translate(Vector3f(0.0f, 0.0f, 100.0f*dt))
+        if (window.getKeyState(org.lwjgl.glfw.GLFW.GLFW_KEY_A))
+            figur.translate(Vector3f(-50.0f*dt, 0.0f, 0.0f))
+        if (window.getKeyState(org.lwjgl.glfw.GLFW.GLFW_KEY_D))
+            figur.translate(Vector3f(50.0f*dt, 0.0f, 0.0f))
+
+
+
         if (window.getKeyState(GLFW_KEY_F)) {
             bikeSpotLight.rotate(Math.PI.toFloat() * dt, 0.0f, 0.0f)
         }

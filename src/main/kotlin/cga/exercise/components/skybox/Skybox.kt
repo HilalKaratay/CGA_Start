@@ -4,7 +4,7 @@ import cga.exercise.components.geometry.Material
 
 import cga.exercise.components.shader.ShaderProgram
 
-
+/*
     class Skybox(
         positiveX: FileHandle?, negativeX: FileHandle?, positiveY: FileHandle?, negativeY: FileHandle?,
         positiveZ: FileHandle?, negativeZ: FileHandle?
@@ -83,3 +83,4 @@ import cga.exercise.components.shader.ShaderProgram
             cubemap.dispose()
         }
     }
+*/
