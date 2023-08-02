@@ -37,6 +37,7 @@ class Scene(private val window: GameWindow) {
     private val brücke: Renderable
     private val haus: Renderable
     private val gras: Renderable
+    private val gras2: Renderable
 
     private val groundMaterial: Material
     private val groundColor: Vector3f
@@ -96,7 +97,8 @@ class Scene(private val window: GameWindow) {
 
         baum = loadModel("assets/models/Baum/Baum.obj" ,Math.toRadians(-90.0f), Math.toRadians(90.0f), 0.0f)?: throw IllegalArgumentException("Could not load the model")
         baum.translate(Vector3f(7f, 0f, 0f))
-        blume = loadModel("assets/models/Blume/blume.obj" ,Math.toRadians(-90.0f), Math.toRadians(90.0f), 0.0f)?: throw IllegalArgumentException("Could not load the model")
+        blume = loadModel("assets/models/Blume/blume.obj" ,Math.toRadians(0.0f), Math.toRadians(0.0f), 0.0f)?: throw IllegalArgumentException("Could not load the model")
+        blume.translate(Vector3f(10f, 0f, 0f))
         baum2 = loadModel("assets/models/Baum_2/baum_2.obj" ,Math.toRadians(-0.0f), Math.toRadians(0.0f), 0.0f)?: throw IllegalArgumentException("Could not load the model")
         baum2.translate(Vector3f(-10f, 0f, 0f))
         laterne = loadModel("assets/models/Laterne/Laterne.obj" ,Math.toRadians(0.0f), Math.toRadians(0.0f), 0.0f)?: throw IllegalArgumentException("Could not load the model")
@@ -111,6 +113,8 @@ class Scene(private val window: GameWindow) {
         haus.translate(Vector3f(0f, 0f, 0f))
         gras = loadModel("assets/models/Gras/Gras.obj" ,Math.toRadians(0.0f), Math.toRadians(0.0f), 0.0f)?: throw IllegalArgumentException("Could not load the model")
         gras.translate(Vector3f(5f, 0f, 0f))
+        gras2 = loadModel("assets/models/Gras2/Gras2.obj" ,Math.toRadians(0.0f), Math.toRadians(0.0f), 0.0f)?: throw IllegalArgumentException("Could not load the model")
+        gras2.translate(Vector3f(-3f, 0f, 0f))
 
         //setup camera
         camera = TronCamera(
@@ -184,6 +188,7 @@ class Scene(private val window: GameWindow) {
         brücke.render(staticShader)
         haus.render(staticShader)
         gras.render(staticShader)
+        gras2.render(staticShader)
     }
 
     fun update(dt: Float, t: Float) {
