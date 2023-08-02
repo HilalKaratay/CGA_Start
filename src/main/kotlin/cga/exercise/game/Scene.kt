@@ -24,7 +24,7 @@ class Scene(private val window: GameWindow) {
     private val staticShader: ShaderProgram = ShaderProgram("assets/shaders/tron_vert.glsl", "assets/shaders/tron_frag.glsl")
 
     private val ground: Renderable
-    private val bike: Renderable
+    private val figur: Renderable
 
     private val baum: Renderable
 
@@ -34,6 +34,9 @@ class Scene(private val window: GameWindow) {
     //Lights
     private val bikePointLight: PointLight
     private val pointLightList = mutableListOf<PointLight>()
+
+    //private val sonne:Licht
+    //private val licht= mutableListOf<Licht>()
 
     private val bikeSpotLight: SpotLight
     private val spotLightList = mutableListOf<SpotLight>()
@@ -69,10 +72,11 @@ class Scene(private val window: GameWindow) {
             val mesh = Mesh(m.vertexData, m.indexData, vertexAttributes, groundMaterial)
             ground.meshes.add(mesh)
         }
-        bike = loadModel("assets/Light Cycle/Light Cycle/HQ_Movie cycle.obj", Math.toRadians(-90.0f), Math.toRadians(90.0f), 0.0f) ?: throw IllegalArgumentException("Could not load the model")
-        bike.scale(Vector3f(0.8f, 0.8f, 0.8f))
+        figur = loadModel("assets/models/figur.obj", Math.toRadians(0.0f), Math.toRadians(0.0f), 0.0f) ?: throw IllegalArgumentException("Could not load the model")
+        figur.scale(Vector3f(0.8f, 0.8f, 0.8f))
 
-        baum = loadModel("assets/models/Baum/Baum.obj",)?: throw IllegalArgumentException("Could not load the model")
+
+        baum = loadModel("assets/models/Baum/Baum.obj" ,Math.toRadians(-90.0f), Math.toRadians(90.0f), 0.0f)?: throw IllegalArgumentException("Could not load the model")
 
         //setup camera
         camera = TronCamera(
@@ -81,7 +85,7 @@ class Scene(private val window: GameWindow) {
                 0.1f,
                 100.0f
         )
-        camera.parent = bike
+        camera.parent = figur
         camera.rotate(Math.toRadians(-35.0f), 0.0f, 0.0f)
         camera.translate(Vector3f(0.0f, 0.0f, 4.0f))
 
@@ -89,13 +93,13 @@ class Scene(private val window: GameWindow) {
 
         //bike point light
         bikePointLight = PointLight("pointLight[${pointLightList.size}]", Vector3f(0.0f, 2.0f, 0.0f), Vector3f(0.0f, 0.5f, 0.0f))
-        bikePointLight.parent = bike
+        bikePointLight.parent = figur
         pointLightList.add(bikePointLight)
 
         //bike spot light
         bikeSpotLight = SpotLight("spotLight[${spotLightList.size}]", Vector3f(3.0f, 3.0f, 3.0f), Vector3f(0.0f, 1.0f, -2.0f), Math.toRadians(20.0f), Math.toRadians(30.0f))
         bikeSpotLight.rotate(Math.toRadians(-10.0f), 0.0f, 0.0f)
-        bikeSpotLight.parent = bike
+        bikeSpotLight.parent = figur
         spotLightList.add(bikeSpotLight)
 
         // additional lights in the scene
@@ -119,7 +123,7 @@ class Scene(private val window: GameWindow) {
         staticShader.use()
         camera.bind(staticShader)
 
-        val changingColor = Vector3f(Math.abs(Math.sin(t)), 0f, Math.abs(Math.cos(t)))
+        val changingColor = Vector3f(1.0f, 1.0f, 1.0f)
         bikePointLight.lightColor = changingColor
 
         // bind lights
@@ -135,7 +139,8 @@ class Scene(private val window: GameWindow) {
         // render objects
         staticShader.setUniform("shadingColor", groundColor)
         ground.render(staticShader)
-        bike.render(staticShader)
+        staticShader.setUniform("shadingColor",changingColor)
+        figur.render(staticShader)
         baum.render(staticShader)
     }
 
@@ -143,16 +148,16 @@ class Scene(private val window: GameWindow) {
         val moveMul = 5.0f
         val rotateMul = 0.5f * Math.PI.toFloat()
         if (window.getKeyState(GLFW_KEY_W)) {
-            bike.translate(Vector3f(0.0f, 0.0f, -dt * moveMul))
+            figur.translate(Vector3f(0.0f, 0.0f, -dt * moveMul))
         }
         if (window.getKeyState(GLFW_KEY_S)) {
-            bike.translate(Vector3f(0.0f, 0.0f, dt * moveMul))
+            figur.translate(Vector3f(0.0f, 0.0f, dt * moveMul))
         }
         if (window.getKeyState(GLFW_KEY_A) and window.getKeyState(GLFW_KEY_W)) {
-            bike.rotate(0.0f, dt * rotateMul, 0.0f)
+            figur.rotate(0.0f, dt * rotateMul, 0.0f)
         }
         if (window.getKeyState(GLFW_KEY_D) and window.getKeyState(GLFW_KEY_W)) {
-            bike.rotate(0.0f, -dt * rotateMul, 0.0f)
+            figur.rotate(0.0f, -dt * rotateMul, 0.0f)
         }
         if (window.getKeyState(GLFW_KEY_F)) {
             bikeSpotLight.rotate(Math.PI.toFloat() * dt, 0.0f, 0.0f)
@@ -166,7 +171,7 @@ class Scene(private val window: GameWindow) {
             val yawAngle = (xpos - oldMouseX).toFloat() * 0.002f
             val pitchAngle = (ypos - oldMouseY).toFloat() * 0.0005f
             if (!window.getKeyState(GLFW_KEY_LEFT_ALT)) {
-                bike.rotate(0.0f, -yawAngle, 0.0f)
+                figur.rotate(0.0f, -yawAngle, 0.0f)
             }
             else{
                 camera.rotateAroundPoint(0.0f, -yawAngle, 0.0f, Vector3f(0.0f, 0.0f, 0.0f))
