@@ -92,8 +92,8 @@ class Scene(private val window: GameWindow) {
 
 
         /** Modelle **/
-        figur = loadModel("assets/models/figur.obj", Math.toRadians(0.0f), Math.toRadians(0.0f), 0.0f) ?: throw IllegalArgumentException("Could not load the model")
-        //figur.scale(Vector3f(0.8f, 0.8f, 0.8f))
+        figur = loadModel("assets/models/Figur/figur.obj" ,Math.toRadians(0.0f), Math.toRadians(00.0f), 0.0f)?: throw IllegalArgumentException("Could not load the model")
+        //igur.scale(Vector3f(0.8f, 0.8f, 0.8f))
 
         baum = loadModel("assets/models/Baum/Baum.obj" ,Math.toRadians(-90.0f), Math.toRadians(90.0f), 0.0f)?: throw IllegalArgumentException("Could not load the model")
         baum.translate(Vector3f(7f, 0f, 0f))
@@ -178,6 +178,7 @@ class Scene(private val window: GameWindow) {
         staticShader.setUniform("shadingColor", groundColor)
         ground.render(staticShader)
         staticShader.setUniform("shadingColor",changingColor)
+
         figur.render(staticShader)
         baum.render(staticShader)
         baum2.render(staticShader)
