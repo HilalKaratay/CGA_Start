@@ -5,6 +5,8 @@ import cga.exercise.components.shader.ShaderProgram
 /**
  * Extends Transformable such that the object can render Mesh objects transformed by Transformable
  */
+
+
 class Renderable(val meshes: MutableList<Mesh> = mutableListOf()) : Transformable(parent = null), IRenderable {
 
     /**
@@ -17,4 +19,6 @@ class Renderable(val meshes: MutableList<Mesh> = mutableListOf()) : Transformabl
             m.render(shaderProgram)
         }
     }
+
+
 }

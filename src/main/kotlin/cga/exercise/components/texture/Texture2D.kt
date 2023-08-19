@@ -1,9 +1,14 @@
-package cga.exercise.components.texture
 
+import cga.exercise.components.texture.ITexture
+import cga.framework.GLError
 import cga.framework.GLError.checkEx
 import org.lwjgl.BufferUtils
-import org.lwjgl.opengl.EXTTextureFilterAnisotropic
-import org.lwjgl.opengl.GL30.*
+import org.lwjgl.opengl.*
+
+import org.lwjgl.opengl.GL11.*
+import org.lwjgl.opengl.GL13.GL_TEXTURE0
+import org.lwjgl.opengl.GL20.*
+import org.lwjgl.opengl.GL30.glGenerateMipmap
 import org.lwjgl.stb.STBImage
 import java.nio.ByteBuffer
 
@@ -33,7 +38,7 @@ class Texture2D(imageData: ByteBuffer, width: Int, height: Int, genMipMaps: Bool
             //flip y coordinate to make OpenGL happy
             STBImage.stbi_set_flip_vertically_on_load(true)
             val imageData = STBImage.stbi_load(path, x, y, readChannels, 4)
-                    ?: throw Exception("Image file \"" + path + "\" couldn't be read:\n" + STBImage.stbi_failure_reason())
+                ?: throw Exception("Image file \"" + path + "\" couldn't be read:\n" + STBImage.stbi_failure_reason())
 
             try {
                 return Texture2D(imageData, x.get(), y.get(), genMipMaps)
@@ -47,59 +52,39 @@ class Texture2D(imageData: ByteBuffer, width: Int, height: Int, genMipMaps: Bool
     }
 
     override fun processTexture(imageData: ByteBuffer, width: Int, height: Int, genMipMaps: Boolean) {
-        val tex = glGenTextures()
-        if (tex == 0) {
-            throw Exception("OpenGL texture object creation failed.")
+        texID = GL11.glGenTextures()
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, texID)
+        GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGBA, width, height, 0, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, imageData)
+        if(genMipMaps) {
+            GL30.glGenerateMipmap(GL11.GL_TEXTURE_2D)
         }
-        glBindTexture(GL_TEXTURE_2D, tex)
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, imageData)
-        //should be done but explained before
-        if (checkEx()) {
-            glDeleteTextures(tex)
-            throw Exception("glTexImage2D call failed.")
-        }
-        //explain mipmaps and their creation
-        if (genMipMaps) {
-            glGenerateMipmap(GL_TEXTURE_2D)
-            if (checkEx()) {
-                glDeleteTextures(tex)
-                throw Exception("Mipmap creation failed.")
-            }
-        }
-        glBindTexture(GL_TEXTURE_2D, 0)
-        texID = tex
     }
 
     override fun setTexParams(wrapS: Int, wrapT: Int, minFilter: Int, magFilter: Int) {
-        bind(0)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrapS)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrapT)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, minFilter)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, magFilter)
-        //Try out anisotopic filtering: aflevel e.g. 16.0f
-        glTexParameterf(GL_TEXTURE_2D, EXTTextureFilterAnisotropic.GL_TEXTURE_MAX_ANISOTROPY_EXT, 16.0f)
-        if (checkEx()) {
-            unbind()
-            throw Exception("Setting texture params failed.")
-        }
-        unbind()
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, texID)
+        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, minFilter)
+        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, magFilter)
+        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, wrapS)
+        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, wrapT)
+        GL11.glTexParameterf(GL11.GL_TEXTURE_2D,
+            EXTTextureFilterAnisotropic.GL_TEXTURE_MAX_ANISOTROPY_EXT,
+            16.0f)
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0)
     }
 
     override fun bind(textureUnit: Int) {
-        if (texID != 0) {
-            glActiveTexture(GL_TEXTURE0 + textureUnit)
-            glBindTexture(GL_TEXTURE_2D, texID)
-        }
+        GL13.glActiveTexture(textureUnit)
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, texID)
     }
 
     override fun unbind() {
-        glBindTexture(GL_TEXTURE_2D, 0)
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0)
     }
 
     override fun cleanup() {
         unbind()
         if (texID != 0) {
-            glDeleteTextures(texID)
+            GL11.glDeleteTextures(texID)
             texID = 0
         }
     }

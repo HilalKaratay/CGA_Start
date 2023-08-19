@@ -1,6 +1,7 @@
 package cga.exercise.components.geometry
 
 import cga.exercise.components.shader.ShaderProgram
+import org.joml.Vector3f
 import org.lwjgl.opengl.GL30.*
 
 /**
@@ -13,12 +14,21 @@ import org.lwjgl.opengl.GL30.*
  *
  * Created by Fabian on 16.09.2017.
  */
-class Mesh(vertexdata: FloatArray, indexdata: IntArray, attributes: Array<VertexAttribute>, private val material: Material) {
+class Mesh(
+    var vertexdata: FloatArray,
+    var indexdata: IntArray,
+    attributes: Array<VertexAttribute>,
+    private val material: Material
+    ) {
     //private data
     private var vaoId = 0
     private var vboId = 0
     private var iboId = 0
     private var indexcount = 0
+
+
+    private var minVertexPositions: Vector3f? = null
+    private var maxVertexPositions: Vector3f? = null
 
     init {
         vaoId = glGenVertexArrays()
@@ -76,6 +86,59 @@ class Mesh(vertexdata: FloatArray, indexdata: IntArray, attributes: Array<Vertex
         material.bind(shaderProgram)
         render()
         shaderProgram.resetTU()
+    }
+
+
+//NEU
+    fun minVertex(): Vector3f {
+
+        if(minVertexPositions == null){
+            minVertexPositions = Vector3f(minX(), minY(), minZ())
+        }
+        return minVertexPositions!!
+    }
+
+    private fun minX(): Float {
+        var minValue = vertexdata[0]
+        vertexdata.forEachIndexed { index, value -> if (index % 8 == 0 && value < minValue) minValue = value }
+        return minValue
+    }
+
+    private fun minY(): Float {
+        var minValue = vertexdata[1]
+        vertexdata.forEachIndexed { index, value -> if (index % 8 == 1 && value < minValue) minValue = value }
+        return minValue
+    }
+
+    private fun minZ(): Float {
+        var minValue = vertexdata[2]
+        vertexdata.forEachIndexed { index, value -> if (index % 8 == 2 && value < minValue) minValue = value }
+        return minValue
+    }
+
+    fun maxVertex(): Vector3f {
+        if(maxVertexPositions == null){
+            maxVertexPositions = Vector3f(maxX(), maxY(),maxZ())
+        }
+        return maxVertexPositions!!
+    }
+
+    private fun maxX(): Float {
+        var maxValue = vertexdata[0]
+        vertexdata.forEachIndexed { index, value -> if (index % 8 == 0 && value > maxValue) maxValue = value }
+        return maxValue
+    }
+
+    private fun maxY(): Float {
+        var maxValue = vertexdata[1]
+        vertexdata.forEachIndexed { index, value -> if (index % 8 == 1 && value > maxValue) maxValue = value }
+        return maxValue
+    }
+
+    private fun maxZ(): Float {
+        var maxValue = vertexdata[2]
+        vertexdata.forEachIndexed { index, value -> if (index % 8 == 2 && value > maxValue) maxValue = value }
+        return maxValue
     }
 
     /**

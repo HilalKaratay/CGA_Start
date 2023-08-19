@@ -1,7 +1,8 @@
 package cga.exercise.components.geometry
 
+import Texture2D
 import cga.exercise.components.shader.ShaderProgram
-import cga.exercise.components.texture.Texture2D
+
 import org.joml.Vector2f
 
 class Material(var diff: Texture2D,

@@ -27,6 +27,9 @@ class TronCamera(var aspectratio: Aspectratio = Aspectratio.WIDESCREEN,
         shader.setUniform("view_matrix", calculateViewMatrix(), false);
         shader.setUniform("proj_matrix", calculateProjectionMatrix(), false);
     }
+
+
+
 }
 
 class Aspectratio(val ratio : Float) {

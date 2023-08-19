@@ -1,6 +1,6 @@
 package cga.exercise.components.shader
 
-import cga.exercise.components.texture.Texture2D
+import Texture2D
 import org.joml.*
 import org.lwjgl.BufferUtils
 import org.lwjgl.opengl.GL11
@@ -13,7 +13,7 @@ import java.nio.file.Paths
 /**
  * Created by Fabian on 16.09.2017.
  */
-class ShaderProgram(vertexShaderPath: String, fragmentShaderPath: String) {
+open class ShaderProgram(vertexShaderPath: String, fragmentShaderPath: String) {
     private var programID: Int = 0
     //Matrix buffers for setting matrix uniforms. Prevents allocation for each uniform
     private val m3x3buf: FloatBuffer = BufferUtils.createFloatBuffer(9)
@@ -296,6 +296,8 @@ class ShaderProgram(vertexShaderPath: String, fragmentShaderPath: String) {
         }
         return false
     }
+
+
 
     /**
      * Creates a shader object from vertex and fragment shader paths

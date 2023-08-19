@@ -18,6 +18,14 @@ open class Transformable(private var modelMatrix: Matrix4f = Matrix4f(), var par
      * Hint: scene graph
      * @return world modelMatrix
      */
+
+
+    //NEU
+    fun setPosition(pos: Vector3f) {
+        modelMatrix.set(3, 0, pos.x)
+        modelMatrix.set(3, 1, pos.y)
+        modelMatrix.set(3, 2, pos.z)
+    }
     fun getWorldModelMatrix(): Matrix4f {
         return parent?.getWorldModelMatrix()?.mul(getModelMatrix()) ?: getModelMatrix()
     }
