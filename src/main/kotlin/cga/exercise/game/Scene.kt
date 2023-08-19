@@ -80,11 +80,17 @@ class Scene(private val window: GameWindow) {
     var enemyG = 0f
 
     /**Skybox**/
-    private val skyboxShader: ShaderProgram
+   private val skyboxShader: ShaderProgram
     private var skybox = Skybox()
     private var skyBoxTextures = ArrayList<String>()
 
+   /* private val skyboxShader: ShaderProgram
+    private var skybox: Skybox = Skybox()
+    private var skyboxScale: Transformable = Transformable()*/
 
+
+
+   private val  baumm = loadModel("assets/models/Baum/Baum.obj" ,-90.0f, 90.0f, 0.0f)
 
     //scene setup
     init {
@@ -169,7 +175,14 @@ class Scene(private val window: GameWindow) {
         camera.translate(Vector3f(0.0f, 0.0f, 4.0f))
 
 
+
+
         groundColor = Vector3f(1.0f, 1.0f, 1.0f)
+
+        camera.parent = ground
+        ground.translate(Vector3f(0f, 0f, 500f))
+        ground.scale(Vector3f(0.08f))
+
 
 
         //bike point light
@@ -199,7 +212,9 @@ class Scene(private val window: GameWindow) {
         glDepthFunc(GL_LESS); GLError.checkThrow()
 
 
+
         boxList.add(baum)
+
 
 
         /**Skybox**/
@@ -212,11 +227,31 @@ class Scene(private val window: GameWindow) {
         skyBoxTextures.add("assets/textures/skybox/back.jpg")
 
         skybox.loadCubemap(skyBoxTextures)
+/*
+        /**Skybox Version 2**/
 
+        //Cubemap pngs werden in einem Array gespeichert
+        val facesCubemapStil1 = arrayOf<String>(
+            "assets/textures/right.png",
+            "assets/textures/left.png",
+            "assets/textures/up.png",
+            "assets/textures/down.png",
+            "assets/textures/front.png",
+            "assets/textures/back.png"
+        )
+
+//Skybox Textur wird ausgewählt und Skybox wird in der Welt platziert
+        skybox.loadCubemap(facesCubemapStil1)
+        skyboxScale.scale(Vector3f(15f,15f,11f))
+        skyboxScale.translate(Vector3f(5f,8f,9f))
+        skyboxShader.setUniform("skybox", 0)*/
 
     }
 
     fun render(dt: Float, t: Float) {
+
+        staticShader.use()
+
         glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
         staticShader.use()
         camera.bind(staticShader)
@@ -237,13 +272,13 @@ class Scene(private val window: GameWindow) {
 
         staticShader.setUniform("numSpotLights", spotLightList.size)
 
-        // render objects
+
         staticShader.setUniform("shadingColor", groundColor)
         ground.render(staticShader)
         staticShader.setUniform("shadingColor",changingColor)
 
-       figur?.render(staticShader)
-        baum.render(staticShader)
+        figur.render(staticShader)
+        /*baum.render(staticShader)
         baum2.render(staticShader)
         blume.render(staticShader)
         laterne.render(staticShader)
@@ -252,15 +287,18 @@ class Scene(private val window: GameWindow) {
         brücke.render(staticShader)
         haus.render(staticShader)
         gras.render(staticShader)
-        gras2.render(staticShader)
+        gras2.render(staticShader)*/
 
-        staticShader.use()
 
-        skybox.render(
-            skyboxShader,
+
+        baumm?.render(staticShader)
+
+
+        /**Skybox**/
+
+        skybox.render( skyboxShader,
             camera.calculateViewMatrix(),
-            camera.calculateProjectionMatrix()
-        )
+            camera.calculateProjectionMatrix())
 
 
     }
@@ -491,7 +529,7 @@ class Scene(private val window: GameWindow) {
     }*/
 
     fun onMouseScroll(xoffset: Double, yoffset: Double) {
-     //   camera.fov += Math.toRadians(yoffset.toFloat())
+       camera.fov += Math.toRadians(yoffset.toFloat())
    }
 }
 

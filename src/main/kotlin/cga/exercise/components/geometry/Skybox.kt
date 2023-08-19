@@ -1,112 +1,129 @@
 import cga.exercise.components.shader.ShaderProgram
 import org.joml.Matrix3f
 import org.joml.Matrix4f
-import org.joml.Vector3f
+
 import org.lwjgl.BufferUtils
-import org.lwjgl.opengl.*
 import org.lwjgl.stb.STBImage
-import java.util.*
+import org.lwjgl.opengl.GL11
+import org.lwjgl.opengl.GL30.*
 
 class Skybox {
-    private var texID: Int = -1
-        private set
-    private var vao = 0
-    private var vbo = 0
-    private var ibo = 0
-    private var indexcount = 0
+
+    private var skyboxVAO = 0
+    private var skyboxVBO = 0
+    private var skyboxIBO = 0
+    private var cubemapTexture = -1
+
+    private var skyboxVertices: FloatArray = floatArrayOf(
+        -1f, -1f, 1f,
+        1f, -1f, 1f,
+        1f, -1f, -1f,
+        -1f, -1f, -1f,
+        -1f, 1f, 1f,
+        1f, 1f, 1f,
+        1f, 1f, -1f,
+        -1f, 1f, -1f
+    )
+
+    private var skyboxIndices: IntArray = intArrayOf(
+        //Rechts
+        1, 2, 6,
+        6, 5, 1,
+        //Links
+        0, 4, 7,
+        7, 3, 0,
+        //Oben
+        4, 5, 6,
+        6, 7, 4,
+        //Unten
+        0, 3, 2,
+        2, 1, 0,
+        //Hinten
+        0, 1, 5,
+        5, 4, 0,
+        //Vorne
+        3, 7, 6,
+        6, 2, 3
+    )
+
+
 
     init {
+        skyboxVAO = glGenVertexArrays()
+        skyboxVBO = glGenBuffers()
+        skyboxIBO = glGenBuffers()
 
-        var skyboxVertices = floatArrayOf(
-            // positions
-            -1f, -1f, -1f,
-            1f, -1f, -1f,
-            1f, 1f, -1f,
-            -1f, 1f, -1f,
-            -1f, -1f, 1f,
-            1f, -1f, 1f,
-            1f, 1f, 1f,
-            -1f, 1f, 1f
-        )
+        glBindVertexArray(skyboxVAO)
+        glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO)
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, skyboxIBO)
 
-        var skyboxIndices = intArrayOf(
-            //Rechts
-            1, 2, 6,
-            6, 5, 1,
-            //Links
-            0, 4, 7,
-            7, 3, 0,
-            //Oben
-            4, 5, 6,
-            6, 7, 4,
-            //Unten
-            0, 3, 2,
-            2, 1, 0,
-            //Hinten
-            0, 1, 5,
-            5, 4, 0,
-            //Vorne
-            3, 7, 6,
-            6, 2, 3
-        )
+        glBufferData(GL_ARRAY_BUFFER, skyboxVertices, GL_STATIC_DRAW)
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, skyboxIndices, GL_STATIC_DRAW)
+        glEnableVertexAttribArray(0)
+        glVertexAttribPointer(0, 3, GL_FLOAT, false, 3*4, 0)
 
-        indexcount = skyboxIndices.size
 
-        // todo: generate IDs
-        vao = GL30.glGenVertexArrays()
-        vbo = GL15.glGenBuffers()
-        ibo = GL15.glGenBuffers()
-        // todo: bind your objects
-        GL30.glBindVertexArray(vao)
-        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vbo)
-        GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, ibo)
-        // todo: upload your mesh data
-        GL15.glBufferData(GL15.GL_ARRAY_BUFFER, skyboxVertices, GL15.GL_STATIC_DRAW)
-        GL20.glEnableVertexAttribArray(0)
-        GL20.glVertexAttribPointer(0, 3, GL11.GL_FLOAT, false, 12, 0)
-        GL15.glBufferData(GL15.GL_ELEMENT_ARRAY_BUFFER, skyboxIndices, GL15.GL_STATIC_DRAW)
-        GL30.glBindVertexArray(0)
-        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0)
-        GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, 0)
+
     }
 
-    fun loadCubemap(faces : ArrayList<String>){
-        texID = GL11.glGenTextures()
-        GL11.glBindTexture(GL13.GL_TEXTURE_CUBE_MAP, texID)
+    fun loadCubemap(textures: ArrayList<String>){
+        cubemapTexture = glGenTextures()
+        glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture)
 
-        var width = BufferUtils.createIntBuffer(1)
-        var height = BufferUtils.createIntBuffer(1)
-        var nrChannels = BufferUtils.createIntBuffer(1)
 
-        for(i in 0 until faces.size)
-        {
+        for (i in 0 until 6){
+            val x = BufferUtils.createIntBuffer(1)
+            val y = BufferUtils.createIntBuffer(1)
+            val nrChannels = BufferUtils.createIntBuffer(1)
             STBImage.stbi_set_flip_vertically_on_load(false)
-            val imageData = STBImage.stbi_load(faces[i], width, height, nrChannels, 4)
-                ?: throw Exception("Image file \"" + faces[i] + "\" couldn't be read:\n" + STBImage.stbi_failure_reason())
-            GL11.glTexImage2D(GL13.GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL13.GL_RGBA, width.get(), height.get(), 0, GL13.GL_RGBA, GL13.GL_UNSIGNED_BYTE, imageData)
-            width.clear()
-            height.clear()
-            nrChannels.clear()
-            STBImage.stbi_image_free(imageData)
+            val data = STBImage.stbi_load(textures[i], x, y, nrChannels, 0)
+                ?: throw Exception("Image file \"" + textures[i] + "\" couldn't be read:\n" + STBImage.stbi_failure_reason())
+
+            val width = x.get()
+            val height = y.get()
+            GL11.glTexImage2D(
+                GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
+                0,
+                GL_RGB,
+                width,
+                height,
+                0,
+                GL_RGB,
+                GL_UNSIGNED_BYTE,
+                data
+            )
+            STBImage.stbi_image_free(data)
+
         }
 
-        GL11.glTexParameteri(GL13.GL_TEXTURE_CUBE_MAP, GL13.GL_TEXTURE_MIN_FILTER, GL13.GL_LINEAR)
-        GL11.glTexParameteri(GL13.GL_TEXTURE_CUBE_MAP, GL13.GL_TEXTURE_MAG_FILTER, GL13.GL_LINEAR)
-        GL11.glTexParameteri(GL13.GL_TEXTURE_CUBE_MAP, GL13.GL_TEXTURE_WRAP_S, GL13.GL_CLAMP_TO_EDGE)
-        GL11.glTexParameteri(GL13.GL_TEXTURE_CUBE_MAP, GL13.GL_TEXTURE_WRAP_T, GL13.GL_CLAMP_TO_EDGE)
-        GL11.glTexParameteri(GL13.GL_TEXTURE_CUBE_MAP, GL13.GL_TEXTURE_WRAP_R, GL13.GL_CLAMP_TO_EDGE)
+
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE)
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE)
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE)
+        glBindTexture(GL_TEXTURE_CUBE_MAP,0)
+        glBindVertexArray(0)
+        glBindBuffer(GL_ARRAY_BUFFER, 0)
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0)
     }
 
     fun render(shader : ShaderProgram, view : Matrix4f, projection: Matrix4f){
+        glActiveTexture(GL_TEXTURE0)
+        glBindVertexArray(skyboxVAO)
         GL11.glDepthMask(false)
         shader.use()
         var newView = Matrix4f(Matrix3f(view))
         shader.setUniform("view", newView , false)
         shader.setUniform("projection", projection, false)
-        GL30.glBindVertexArray(vao)
-        GL30.glBindTexture(GL13.GL_TEXTURE_CUBE_MAP, texID)
-        GL11.glDrawElements(GL11.GL_TRIANGLES, indexcount, GL11.GL_UNSIGNED_INT, 0)
-        GL30.glBindVertexArray(0)
+
+        glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture)
+        glDrawElements(GL_TRIANGLES, skyboxIndices.size, GL_UNSIGNED_INT, 0)
+        glBindVertexArray(0)
+
+        glBindVertexArray(0)
         GL11.glDepthMask(true)
     }
+
+
 }
