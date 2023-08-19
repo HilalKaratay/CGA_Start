@@ -1,34 +1,78 @@
-package cga.exercise.game
-
-import Skybox
-import Texture2D
 import cga.exercise.components.camera.Aspectratio.Companion.custom
 import cga.exercise.components.camera.TronCamera
-
 import cga.exercise.components.geometry.*
 import cga.exercise.components.light.PointLight
 import cga.exercise.components.light.SpotLight
 import cga.exercise.components.shader.ShaderProgram
+import cga.exercise.components.texture.CubemapTexture
 import cga.framework.GLError
 import cga.framework.GameWindow
-import cga.framework.ModelLoader
 import cga.framework.ModelLoader.loadModel
 import cga.framework.OBJLoader.loadOBJ
-import org.joml.*
+import org.joml.Math
+import org.joml.Vector2f
+import org.joml.Vector3f
 import org.lwjgl.glfw.GLFW.*
-import org.lwjgl.opengl.GL13.*
-import kotlin.math.sqrt
+import org.lwjgl.opengl.GL11.*
+import org.lwjgl.opengl.GL30
 
 /**
  * Created by Fabian on 16.09.2017.
  */
 class Scene(private val window: GameWindow) {
-   private val staticShader: ShaderProgram
 
-
-    //private val collisionChecker = Collision()
-   // private val powerup = Renderable()
     private val bikeColBox = Transformable()
+
+    private var figur = loadModel("assets/models/Figur/figur.obj", Math.toRadians(0f), Math.toRadians(0f), 0f) ?: throw IllegalArgumentException("Could not load the model")
+
+    //Shader
+    private val staticShader: ShaderProgram = ShaderProgram("assets/shaders/tron_vert.glsl", "assets/shaders/tron_frag.glsl")
+    private val skyboxShader: ShaderProgram
+
+
+    //Skybox / Cubemap
+    // Define Vertices and Indices of Cubemap
+    private var size: Float = -20.00f
+    private var skyboxVertices: FloatArray = floatArrayOf(
+        -size, -size, size,
+        size, -size, size,
+        size, -size, -size,
+        -size, -size, -size,
+        -size, size, size,
+        size, size, size,
+        size, size, -size,
+        -size, size, -size
+    )
+
+    private var skyboxIndices: IntArray = intArrayOf(
+
+        //right
+        1, 2, 6,
+        6, 5, 1,
+        //left
+        0, 4, 7,
+        7, 3, 0,
+        //top
+        4, 5, 6,
+        6, 7, 4,
+        //bottom
+        0, 3, 2,
+        2, 1, 0,
+        //back
+        0, 1, 5,
+        5, 4, 0,
+        //front
+        3, 7, 6,
+        6, 2, 3
+    )
+
+    private var cubeMap = CubemapTexture(skyboxVertices, skyboxIndices)
+    private var cubeMapTexture = glGenTextures()
+
+
+    private val ground: Renderable
+
+
 
     /**Modelle**/
     //private val figur: Renderable
@@ -43,92 +87,81 @@ class Scene(private val window: GameWindow) {
     private val gras: Renderable
     private val gras2: Renderable
 
-    /**Boden*/
-    private val ground: Renderable
     private val groundMaterial: Material
     private val groundColor: Vector3f
 
-    /**Licht**/
-    private val bikePointLight: PointLight
-    private val pointLightList = mutableListOf<PointLight>()
-
+    //Lights
     private val bikeSpotLight: SpotLight
-    private val spotLightList = mutableListOf<SpotLight>()
+    private val bikePointLight: PointLight
 
-    /**Kamera**/
+    private val bikePointLight2: PointLight
+    private val bikePointLight3: PointLight
+
+    //camera
     private val camera: TronCamera
+
+
+    private val cameraZoom: TronCamera
+    private val cameraOben: TronCamera
+
+    private var cameraHinten : TronCamera
+
     private var oldMouseX = 0.0
     private var oldMouseY = 0.0
     private var firstMouseMove = true
 
+    var jumps = 0
 
-    private var jump = 0
-    private var jumpvector = 0.5f
+    // Player movement
+    var left = false
 
-
-    private var movementTimer = 0
-    private var speedMultiplier:Double = 10.0
-    private var collision = false
-
-    val boxList = arrayListOf<Renderable>()
-
-    //private val racoon: Enemy = Enemy(ModelLoader.loadModel("assets/models/Racoon/racoon.obj", 0f, 0f, 0f) as Renderable, true)
-    private var figur = ModelLoader.loadModel("assets/models/Figur/figur.obj", Math.toRadians(0f), Math.toRadians(0f), 0f) ?: throw IllegalArgumentException("Could not load the model")
-
-    var objectG = 2f
-    var upwardsSpeed = 0f
-    var enemyG = 0f
-
-    /**Skybox**/
-   private val skyboxShader: ShaderProgram
-    private var skybox = Skybox()
-    private var skyBoxTextures = ArrayList<String>()
-
-   /* private val skyboxShader: ShaderProgram
-    private var skybox: Skybox = Skybox()
-    private var skyboxScale: Transformable = Transformable()*/
-
-
-
-   private val  baumm = loadModel("assets/models/Baum/Baum.obj" ,-90.0f, 90.0f, 0.0f)
 
     //scene setup
     init {
+        skyboxShader = ShaderProgram("assets/shaders/skybox_vert.glsl", "assets/shaders/skybox_frag.glsl")
 
-        /**Shader**/
-        staticShader = ShaderProgram("assets/shaders/tron_vert.glsl", "assets/shaders/tron_frag.glsl")
-        skyboxShader= ShaderProgram ("assets/shaders/skybox_vert.glsl", "assets/shaders/skybox_frag.glsl")
+        // Loading Cubemap faces
+        val facesCubeMap: ArrayList<String> = arrayListOf()
+        facesCubeMap.addAll(
+            listOf(
+                "assets/textures/skybox/right.jpg",
+                       "assets/textures/skybox/left.jpg",
+                        "assets/textures/skybox/top.jpg",
+                        "assets/textures/skybox/bottom.jpg",
+                        "assets/textures/skybox/front.jpg",
+                        "assets/textures/skybox/back.jpg"
+            )
+        )
+
+        cubeMapTexture = cubeMap.loadCubeMap(facesCubeMap)
 
 
-
-        //load textures
-        val groundDifff = Texture2D("assets/textures/grass3.jpg", true)
-        groundDifff.setTexParams(GL_REPEAT, GL_REPEAT, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR)
-        val groundSpecularr = Texture2D("assets/textures/grass3.jpg", true)
-        groundSpecularr.setTexParams(GL_REPEAT, GL_REPEAT, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR)
-        val groundEmitt = Texture2D("assets/textures/grass3.jpg", true)
-        groundEmitt.setTexParams(GL_REPEAT, GL_REPEAT, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR)
-
-      bikeColBox.parent = figur
-      bikeColBox.translate(Vector3f(0.5f,0.25f,-1.5f))
-
-        //load textures
-        val groundDiff = Texture2D("assets/textures/grass3.jpg", true)
-        groundDiff.setTexParams(GL_REPEAT, GL_REPEAT, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR)
-        val groundSpecular = Texture2D("assets/textures/grass3.jpg", true)
-        groundSpecular.setTexParams(GL_REPEAT, GL_REPEAT, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR)
-        val groundEmit = Texture2D("assets/textures/grass3.jpg", true)
-        groundEmit.setTexParams(GL_REPEAT, GL_REPEAT, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR)
-        groundMaterial = Material(groundDiff, groundEmit, groundSpecular, 60f, Vector2f(64.0f, 64.0f))
 
         //load an object and create a mesh
         val gres = loadOBJ("assets/models/ground.obj")
+
+
+
+        //load textures
+        val groundDiff = Texture2D("assets/textures/grass2.png", true)
+        groundDiff.setTexParams(GL_REPEAT, GL_REPEAT, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR)
+        val groundSpecular = Texture2D("assets/textures/grass2.png", true)
+        groundSpecular.setTexParams(GL_REPEAT, GL_REPEAT, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR)
+        val groundEmit = Texture2D("assets/textures/grass2.png", true)
+        groundEmit.setTexParams(GL_REPEAT, GL_REPEAT, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR)
+        groundMaterial = Material(groundDiff, groundEmit, groundSpecular, 60f, Vector2f(64.0f, 64.0f))
+
+        bikeColBox.parent = figur
+        bikeColBox.translate(Vector3f(0.5f,0.25f,-1.5f))
+
         //Create the mesh
         val stride = 8 * 4
         val atr1 = VertexAttribute(3, GL_FLOAT, stride, 0)     //position attribute
         val atr2 = VertexAttribute(2, GL_FLOAT, stride, 3 * 4) //texture coordinate attribute
         val atr3 = VertexAttribute(3, GL_FLOAT, stride, 5 * 4) //normal attribute
         val vertexAttributes = arrayOf(atr1, atr2, atr3)
+
+
 
         //Create renderable
         ground = Renderable()
@@ -138,12 +171,10 @@ class Scene(private val window: GameWindow) {
         }
 
 
-        /** Modelle **/
-       // figur = loadModel("assets/models/Figur/figur.obj" ,Math.toRadians(0.0f), Math.toRadians(00.0f), 0.0f)?: throw IllegalArgumentException("Could not load the model")
-       // figur.scale(Vector3f(0.8f, 0.8f, 0.8f))
+       figur = loadModel("assets/models/Figur/figur.obj", Math.toRadians(1f), Math.toRadians(-180f), 0f) ?: throw IllegalArgumentException("Could not load the model")
 
-        baum = loadModel("assets/models/Baum/Baum.obj" ,Math.toRadians(-90.0f), Math.toRadians(90.0f), 0.0f)?: throw IllegalArgumentException("Could not load the model")
-        baum.translate(Vector3f(7f, 0f, 0f))
+        baum = loadModel("assets/models/Baum/Baum.obj", Math.toRadians(-90.0f), Math.toRadians(90.0f), 0.0f)?: throw IllegalArgumentException("Could not load the model")
+
         blume = loadModel("assets/models/Blume/blume.obj" ,Math.toRadians(0.0f), Math.toRadians(0.0f), 0.0f)?: throw IllegalArgumentException("Could not load the model")
         blume.translate(Vector3f(10f, 0f, 0f))
         baum2 = loadModel("assets/models/Baum_2/baum_2.obj" ,Math.toRadians(-0.0f), Math.toRadians(0.0f), 0.0f)?: throw IllegalArgumentException("Could not load the model")
@@ -164,43 +195,68 @@ class Scene(private val window: GameWindow) {
         gras2.translate(Vector3f(-3f, 0f, 0f))
 
         //setup camera
-        camera = TronCamera(
-                custom(window.framebufferWidth, window.framebufferHeight),
-                Math.toRadians(120.0f),
-                0.1f,
-                100.0f
+        // Oben Ansicht
+        cameraOben = TronCamera(
+            custom(window.framebufferWidth, window.framebufferHeight),
+            Math.toRadians(90.0f),
+            0.1f,
+            1000.0f
         )
+        cameraOben.rotate(0f,Math.toRadians(1f),0f)
+        cameraOben.rotate(Math.toRadians(-80f),0f,0f)
+        cameraOben.translate(Vector3f(0f,0f,5f))
+
+        // Zoom Ansicht
+        cameraZoom = TronCamera(
+            custom(window.framebufferWidth, window.framebufferHeight),
+            Math.toRadians(90.0f),
+            0.1f,
+            1000.0f
+        )
+        cameraZoom.rotate(0f,Math.toRadians(1f),0f)
+        cameraZoom.rotate(Math.toRadians(-50f),0f,0f)
+        cameraZoom.translate(Vector3f(0f,1f,0.5f))
+
+        // Hinten Weitwinkel Ansicht
+        cameraHinten = TronCamera(
+            custom(window.framebufferWidth, window.framebufferHeight),
+            Math.toRadians(90.0f),
+            0.1f,
+            1000.0f
+        )
+        cameraHinten.rotate(Math.toRadians(-145.0f), 0.0f, Math.toRadians(180.0f))
+        cameraHinten.translate(Vector3f(0.0f, 0.0f, 8.0f))
+
+        // Standart Kamera
+        camera = TronCamera(
+            custom(window.framebufferWidth, window.framebufferHeight),
+            Math.toRadians(120.0f),
+            0.1f,
+            1000.0f
+        )
+        camera.rotate(0f,Math.toRadians(1f),0f)
+        camera.rotate(Math.toRadians(-30f),0f,0f)
+        camera.translate(Vector3f(0f,0f,2.5f))
+
+        // Parent
+        cameraOben.parent = figur
+        cameraZoom.parent = figur
         camera.parent = figur
-        camera.rotate(Math.toRadians(-35.0f), 0.0f, 0.0f)
-        camera.translate(Vector3f(0.0f, 0.0f, 4.0f))
+        cameraHinten.parent = figur
 
-
-
-
+        // BODEN FARBE
         groundColor = Vector3f(1.0f, 1.0f, 1.0f)
 
-        camera.parent = ground
-        ground.translate(Vector3f(0f, 0f, 500f))
-        ground.scale(Vector3f(0.08f))
-
-
-
         //bike point light
-        bikePointLight = PointLight("pointLight[${pointLightList.size}]", Vector3f(0.0f, 2.0f, 0.0f), Vector3f(0.0f, 0.5f, 0.0f))
+        bikePointLight = PointLight("bikePointLight", Vector3f(0.0f, 2.0f, 0.0f), Vector3f(0.0f, 0.5f, 0.0f))
         bikePointLight.parent = figur
-        pointLightList.add(bikePointLight)
-
         //bike spot light
-        bikeSpotLight = SpotLight("spotLight[${spotLightList.size}]", Vector3f(3.0f, 3.0f, 3.0f), Vector3f(0.0f, 1.0f, -2.0f), Math.toRadians(20.0f), Math.toRadians(30.0f))
-        bikeSpotLight.rotate(Math.toRadians(-10.0f), 0.0f, 0.0f)
+        bikeSpotLight = SpotLight("bikeSpotLight", Vector3f(3.0f, 3.0f, 3.0f), Vector3f(0.0f, 1.0f, -2.0f), Math.toRadians(20.0f), Math.toRadians(30.0f))
+        bikeSpotLight.rotate(Math.toRadians(-10.0f), Math.PI.toFloat(), 0.0f)
         bikeSpotLight.parent = figur
-        spotLightList.add(bikeSpotLight)
 
-        // additional lights in the scene
-        pointLightList.add(PointLight("pointLight[${pointLightList.size}]", Vector3f(0.0f, 2.0f, 2.0f), Vector3f(-10.0f, 2.0f, -10.0f)))
-        pointLightList.add(PointLight("pointLight[${pointLightList.size}]", Vector3f(2.0f, 0.0f, 0.0f), Vector3f(10.0f, 2.0f, 10.0f)))
-        spotLightList.add(SpotLight("spotLight[${spotLightList.size}]", Vector3f(10.0f, 300.0f, 300.0f), Vector3f(6.0f, 2.0f, 4.0f), Math.toRadians(20.0f), Math.toRadians(30.0f)))
-        spotLightList.last().rotate(Math.toRadians(20f), Math.toRadians(60f), 0f)
+        bikePointLight2 = PointLight("bikePointLight2", Vector3f(0.0f, 2.0f, 2.0f), Vector3f(-10.0f, 2.0f, -10.0f))
+        bikePointLight3 = PointLight("bikePointLight3", Vector3f(2.0f, 0.0f, 0.0f), Vector3f(10.0f, 2.0f, 10.0f))
 
         //initial opengl state
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f); GLError.checkThrow()
@@ -208,206 +264,135 @@ class Scene(private val window: GameWindow) {
         //glEnable(GL_CULL_FACE)
         //glFrontFace(GL_CCW); GLError.checkThrow()
         //glCullFace(GL_BACK); GLError.checkThrow()
-        glEnable(GL_DEPTH_TEST); GLError.checkThrow()
+       // glEnable(GL_DEPTH_TEST); GLError.checkThrow()
         glDepthFunc(GL_LESS); GLError.checkThrow()
-
-
-
-        boxList.add(baum)
-
-
-
-        /**Skybox**/
-        // Order: right, left, top, bottom, front, back
-        skyBoxTextures.add("assets/textures/skybox/right.jpg")
-        skyBoxTextures.add("assets/textures/skybox/left.jpg")
-        skyBoxTextures.add("assets/textures/skybox/top.jpg")
-        skyBoxTextures.add("assets/textures/skybox/bottom.jpg")
-        skyBoxTextures.add("assets/textures/skybox/front.jpg")
-        skyBoxTextures.add("assets/textures/skybox/back.jpg")
-
-        skybox.loadCubemap(skyBoxTextures)
-/*
-        /**Skybox Version 2**/
-
-        //Cubemap pngs werden in einem Array gespeichert
-        val facesCubemapStil1 = arrayOf<String>(
-            "assets/textures/right.png",
-            "assets/textures/left.png",
-            "assets/textures/up.png",
-            "assets/textures/down.png",
-            "assets/textures/front.png",
-            "assets/textures/back.png"
-        )
-
-//Skybox Textur wird ausgewählt und Skybox wird in der Welt platziert
-        skybox.loadCubemap(facesCubemapStil1)
-        skyboxScale.scale(Vector3f(15f,15f,11f))
-        skyboxScale.translate(Vector3f(5f,8f,9f))
-        skyboxShader.setUniform("skybox", 0)*/
-
     }
 
     fun render(dt: Float, t: Float) {
 
+        glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
+
+        // Skybox render
+        glDepthFunc(GL_LEQUAL)
+        skyboxShader.use()
+
+        skyboxShader.setUniform("view", camera.calculateViewMatrix(), false)
+        skyboxShader.setUniform("projection", camera.calculateProjectionMatrix(), false)
+
+        GL30.glBindVertexArray(cubeMap.skyboxVAO)
+        GL30.glActiveTexture(GL30.GL_TEXTURE0)
+        glBindTexture(GL30.GL_TEXTURE_CUBE_MAP, cubeMapTexture)
+        glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0)
+
+        GL30.glBindVertexArray(0);
+        glDepthFunc(GL_LESS);
+
+
+
         staticShader.use()
 
-        glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
-        staticShader.use()
-        camera.bind(staticShader)
+        ground.render(staticShader)
+        // bind shaders to camera
+        if(window.getKeyState(GLFW_KEY_0)) {
+            cameraZoom.bind(staticShader)
+        }
+        else if (window.getKeyState(GLFW_KEY_1)){
+            cameraHinten.bind(staticShader)
+        }
+        else {
+            camera.bind(staticShader)
+        }
 
 
         val changingColor = Vector3f(1.0f, 1.0f, 1.0f)
-        bikePointLight.lightColor = changingColor
-
-        // bind lights
-        for (pointLight in pointLightList) {
-            pointLight.bind(staticShader)
-        }
-        staticShader.setUniform("numPointLights", pointLightList.size)
-        for (spotLight in spotLightList) {
-            spotLight.bind(staticShader, camera.calculateViewMatrix())
-        }
-
-
-        staticShader.setUniform("numSpotLights", spotLightList.size)
-
-
         staticShader.setUniform("shadingColor", groundColor)
         ground.render(staticShader)
         staticShader.setUniform("shadingColor",changingColor)
 
-        figur.render(staticShader)
-        /*baum.render(staticShader)
-        baum2.render(staticShader)
-        blume.render(staticShader)
-        laterne.render(staticShader)
+
+        //bikePointLight.lightColor = changingColor
+
+        bikePointLight.bind(staticShader)
+        bikePointLight2.bind(staticShader)
+        bikePointLight3.bind(staticShader)
+        bikeSpotLight.bind(staticShader, camera.calculateViewMatrix())
+        //bike.render(staticShader)
+        //bike.render(skyboxShader)
+
+
+        baum.render(staticShader)
         stein.render(staticShader)
-        stein2.render(staticShader)
-        brücke.render(staticShader)
-        haus.render(staticShader)
-        gras.render(staticShader)
-        gras2.render(staticShader)*/
-
-
-
-        baumm?.render(staticShader)
-
-
-        /**Skybox**/
-
-        skybox.render( skyboxShader,
-            camera.calculateViewMatrix(),
-            camera.calculateProjectionMatrix())
+        blume.render(staticShader)
+        //haus.render(staticShader)
+        baum2.render(staticShader)
+        laterne.render(staticShader)
+        blume.render(staticShader)
 
 
     }
-
-
-    /** Collision Test 1**/
-/*
-    //AllgemeinesPrüfen auf Kollision
-    fun collisionCheck(charakter:Renderable, object2:Renderable): Float{
-        val xDistance=charakter.getPosition().x-object2.getPosition().x
-        val yDistance=charakter.getPosition().y-object2.getPosition().y
-        val zDistance=charakter.getPosition().z-object2.getPosition().z
-
-        return Math.sqrt((xDistance*xDistance).toDouble()+
-                (yDistance*yDistance).toDouble()+(zDistance*zDistance).toDouble()).toFloat()
-    }
-
-    //Kollisionsverhalten mit Wolke
-    fun collisionDetectionCloud(drone:Renderable,cloud:Renderable){
-        //Distanzen prüfen
-        if (collisionCheck(drone,cloud)<=0.2f){
-            //wenn getroffen, Drohne neue Position
-            drone.translate(randomPosition())
-        }
-    }
-
-    //Abfrage der einzelnen möglichen Kollisionen
-    fun collisionDetection(){
-
-
-            collisionDetectionCloud(figur,baum)
-
-
-    }*/
-
-
 
     fun update(dt: Float, t: Float) {
+        if(window.getKeyState(GLFW_KEY_0)) { }
+        if(window.getKeyState(GLFW_KEY_1)) { }
 
-        //checkCollision(figur, baum)
-        checkCollisionObject(figur, baum)
-
-        collisionObj(figur, baum, dt)
-        collisionBounce(figur, baum)
-        platform(figur, baum, dt)
-
-        /* val moveMul = 5.0f
+        val moveMul = 5.0f
         val rotateMul = 0.5f * Math.PI.toFloat()
         if (window.getKeyState(GLFW_KEY_W)) {
+            //bike.translate(Vector3f(0.0f, 0.0f, -dt * moveMul))
             figur.translate(Vector3f(0.0f, 0.0f, -dt * moveMul))
         }
         if (window.getKeyState(GLFW_KEY_S)) {
+            //bike.translate(Vector3f(0.0f, 0.0f, dt * moveMul))
             figur.translate(Vector3f(0.0f, 0.0f, dt * moveMul))
         }
-        if (window.getKeyState(GLFW_KEY_A) ) {
+        if (window.getKeyState(GLFW_KEY_A) and window.getKeyState(GLFW_KEY_W)) {
+            //bike.rotate(0.0f, dt * rotateMul, 0.0f)
             figur.rotate(0.0f, dt * rotateMul, 0.0f)
         }
-        if (window.getKeyState(GLFW_KEY_D) ) {
+        if (window.getKeyState(GLFW_KEY_D) and window.getKeyState(GLFW_KEY_W)) {
+            //bike.rotate(0.0f, -dt * rotateMul, 0.0f)
             figur.rotate(0.0f, -dt * rotateMul, 0.0f)
-        }*/
-
-        if (window.getKeyState(org.lwjgl.glfw.GLFW.GLFW_KEY_W)) {
-            figur.translate(Vector3f(0.0f, 0.0f, -100.0f * dt))
-            //collisionDetection()
         }
-        if (window.getKeyState(org.lwjgl.glfw.GLFW.GLFW_KEY_S)) {
-            figur.translate(Vector3f(0.0f, 0.0f, 100.0f * dt))
-            //collisionDetection()
-        }
-        if (window.getKeyState(org.lwjgl.glfw.GLFW.GLFW_KEY_A)){
-            figur.translate(Vector3f(-50.0f * dt, 0.0f, 0.0f))
-            //collisionDetection()
-      }
-        if (window.getKeyState(org.lwjgl.glfw.GLFW.GLFW_KEY_D)) {
-            figur.translate(Vector3f(50.0f * dt, 0.0f, 0.0f))
-            //collisionDetection()
-        }
-
-
-        //SPRINGEN
-        if (window.getKeyState(GLFW_KEY_SPACE) && jump == 0) {
-            figur?.translate(Vector3f(0.0f, 1.0f, 0f * dt))
-            //jump = 1
-        }
-
         if (window.getKeyState(GLFW_KEY_F)) {
             bikeSpotLight.rotate(Math.PI.toFloat() * dt, 0.0f, 0.0f)
         }
 
-       // checkCollisionObject(figur, baum)
+        //links
+        if(window.getKeyState(GLFW_KEY_A)){
 
+            figur.translate(Vector3f(0.0f,0.0f,0f*dt))
+            figur.rotate(0.0f,2f*dt,0.0f)
+        }
+        //rechts
+        if(window.getKeyState(GLFW_KEY_D)){
+            //cycle.translateLocal(Vector3f(0.0f,0.0f,0f*dt))
+            //cycle.rotateLocal(0.0f,-1f*dt,0.0f)
+            //bike.translate(Vector3f(0.0f,0.0f,0f*dt))
+            //bike.rotate(0.0f,-2f*dt,0.0f)
+            figur.translate(Vector3f(0.0f,0.0f,0f*dt))
+            figur.rotate(0.0f,-2f*dt,0.0f)
+        }
 
+        /*
+        //SPRINGEN
+        if(window.getKeyState(GLFW_KEY_SPACE)&&jumps == 0){
+            bike.translate(Vector3f(0.0f,1.0f,0f*dt))
+            jumps = 1
+        }
+
+         */
+
+        //STEIGEN
+        if(window.getKeyState(GLFW_KEY_SPACE)){
+            //bike.translate(Vector3f(0.0f,5.0f*dt,0.0f))
+            figur.translate(Vector3f(0.0f,5.0f*dt,0.0f))
+        }
+        //SINKEN
+        if(window.getKeyState(GLFW_KEY_LEFT_SHIFT)){
+            //bike.translate(Vector3f(0.0f,-5.0f*dt,0.0f))
+            figur.translate(Vector3f(0.0f,-5.0f*dt,0.0f))
+        }
     }
-/*
-        //collision check //ansonten geht es dadurch
-        if(collisionChecker.checkCollision(bikeColBox, boxList))
-        {
-            collision = true
-            speedMultiplier = 0.0
-        }
-
-        //Power UP
-        if(collisionChecker.checkCollisionBikePowerUp(bikeColBox,powerup))
-        {
-            speedMultiplier *= 0.5f
-            figur?.translate(Vector3f(0f,0f,60f))
-        }
-        movementTimer++
-    }*/
 
     fun onKey(key: Int, scancode: Int, action: Int, mode: Int) {}
 
@@ -416,10 +401,11 @@ class Scene(private val window: GameWindow) {
             val yawAngle = (xpos - oldMouseX).toFloat() * 0.002f
             val pitchAngle = (ypos - oldMouseY).toFloat() * 0.0005f
             if (!window.getKeyState(GLFW_KEY_LEFT_ALT)) {
-                figur?.rotate(0.0f, -yawAngle, 0.0f)
+                //bike.rotate(0.0f, yawAngle, 0.0f)
+                figur.rotate(0.0f, yawAngle, 0.0f)
             }
             else{
-                camera.rotateAroundPoint(0.0f, -yawAngle, 0.0f, Vector3f(0.0f, 0.0f, 0.0f))
+                camera.rotateAroundPoint(0.0f, yawAngle, 0.0f, Vector3f(0.0f, 0.0f, 0.0f))
             }
         } else firstMouseMove = false
         oldMouseX = xpos
@@ -427,111 +413,4 @@ class Scene(private val window: GameWindow) {
     }
 
     fun cleanup() {}
-
-    fun collosionDetection(gameObjectX: Renderable, gameObjectY: Renderable): Float {
-        val collisionX : Float = gameObjectX.getPosition().x - gameObjectY.getPosition().x
-        val collisionY : Float = gameObjectX.getPosition().y - gameObjectY.getPosition().y
-        val collisionZ: Float = gameObjectX.getPosition().z - gameObjectY.getPosition().z
-
-        return sqrt(collisionX * collisionX + collisionY * collisionY + collisionZ * collisionZ)
-    }
-
-    fun collisionObj(gameObjectX: Renderable, gameObjectY: Renderable, time: Float) {
-        if(collosionDetection(gameObjectX, gameObjectY) <= 3.0f && gameObjectX.getWorldPosition().z < gameObjectY.getWorldPosition().z && upwardsSpeed == 0f) {
-            upwardsSpeed = objectG
-        }
-        if(collosionDetection(gameObjectX, gameObjectY) <= 3.0f && gameObjectX.getWorldPosition().z > gameObjectY.getWorldPosition().z && upwardsSpeed == 0f) {
-            upwardsSpeed = objectG
-        }
-        if(collosionDetection(gameObjectX, gameObjectY) <= 2f && gameObjectX.getWorldPosition().y < gameObjectY.getWorldPosition().y && upwardsSpeed != 0f) {
-            upwardsSpeed = objectG
-            gameObjectX.translate(Vector3f(0f, -gameObjectX.getWorldPosition().y, 0f))
-        }
-        if(collosionDetection(gameObjectX, gameObjectY) <= 2f && gameObjectX.getWorldPosition().y > gameObjectY.getWorldPosition().y && upwardsSpeed != 0f) {
-            upwardsSpeed = objectG
-            gameObjectY.translate(Vector3f(0f, -gameObjectY.getWorldPosition().y, 0f))
-        }
-    }
-
-    fun collisionBounce(gameObjectX: Renderable, gameObjectY: Renderable) {
-        if(collosionDetection(gameObjectX, gameObjectY) <= 3.0f && gameObjectX.getWorldPosition().z < gameObjectY.getWorldPosition().z && enemyG == 0f) {
-            enemyG = objectG
-        }
-        if(collosionDetection(gameObjectX, gameObjectY) <= 3.0f && gameObjectX.getWorldPosition().z > gameObjectY.getWorldPosition().z && enemyG == 0f) {
-            enemyG = objectG
-        }
-        if(collosionDetection(gameObjectX, gameObjectY) <= 3.0f && gameObjectX.getWorldPosition().z == gameObjectY.getWorldPosition().z && enemyG == 0f) {
-            enemyG = objectG
-        }
-        if(collosionDetection(gameObjectX, gameObjectY) <= 3f && gameObjectX.getWorldPosition().y < gameObjectY.getWorldPosition().y && enemyG != 0f) {
-            enemyG = objectG
-            gameObjectX.translate(Vector3f(0f, (-gameObjectX.getWorldPosition().y), 0f))
-            if(gameObjectX.getWorldPosition().z < gameObjectY.getWorldPosition().z)
-                gameObjectX.translate(Vector3f(0f, 0f, (-gameObjectX.getWorldPosition().z)*0.002f))
-            if(gameObjectX.getWorldPosition().z > gameObjectY.getWorldPosition().z)
-                gameObjectX.translate(Vector3f(0f, 0f, (gameObjectX.getWorldPosition().z)*0.002f))
-            if(gameObjectX.getWorldPosition().z == gameObjectY.getWorldPosition().z)
-                gameObjectX.translate(Vector3f(0f, (gameObjectY.getWorldPosition().y - gameObjectX.getWorldPosition().y)*0.002f, 0f))
-        }
-        if(collosionDetection(gameObjectX, gameObjectY) <= 3f && gameObjectX.getWorldPosition().y > gameObjectY.getWorldPosition().y && enemyG != 0f) {
-            enemyG = objectG
-            gameObjectY.translate(Vector3f(0f, (-gameObjectY.getWorldPosition().y), 0f))
-            if(gameObjectY.getWorldPosition().z < gameObjectX.getWorldPosition().z)
-                gameObjectY.translate(Vector3f(0f, 0f, (-gameObjectY.getWorldPosition().z)*0.002f))
-            if(gameObjectY.getWorldPosition().z > gameObjectX.getWorldPosition().z)
-                gameObjectY.translate(Vector3f(0f, 0f, (gameObjectY.getWorldPosition().z)*0.002f))
-            if(gameObjectX.getWorldPosition().z == gameObjectY.getWorldPosition().z)
-                gameObjectX.translate(Vector3f(0f, (gameObjectX.getWorldPosition().y - gameObjectY.getWorldPosition().y)*0.002f, 0f))
-        }
-    }
-
-    fun platform(gameObjectX: Renderable, gameObjectY: Renderable, time: Float) {
-        if(collosionDetection(gameObjectX, gameObjectY) <= 3.0f && gameObjectX.getWorldPosition().z < gameObjectY.getWorldPosition().z && upwardsSpeed == 0f) {
-            upwardsSpeed = objectG
-        }
-        if(collosionDetection(gameObjectX, gameObjectY) <= 3.0f && gameObjectX.getWorldPosition().z > gameObjectY.getWorldPosition().z && upwardsSpeed == 0f) {
-            upwardsSpeed = objectG
-        }
-        if(collosionDetection(gameObjectX, gameObjectY) <= 2f && gameObjectX.getWorldPosition().y < gameObjectY.getWorldPosition().y && upwardsSpeed != 0f) {
-            upwardsSpeed = objectG
-            gameObjectX.translate(Vector3f(0f, gameObjectY.getWorldPosition().y*0.005f+gameObjectX.getWorldPosition().y*0.02f, 0f))
-        }
-        if(collosionDetection(gameObjectX, gameObjectY) <= 0.9f && gameObjectX.getWorldPosition().y > gameObjectY.getWorldPosition().y && upwardsSpeed != 0f) {
-            upwardsSpeed = objectG
-            gameObjectX.translate(Vector3f(0f, gameObjectY.getWorldPosition().y*0.005f+gameObjectX.getWorldPosition().y*0.02f, 0f))
-        }
-    }
-
-    fun checkCollisionObject(gameObjectX: Renderable, gameObjectY: Renderable): Boolean {
-        var boo = false
-        //Distanz von Spieler zu anderen Objekten wird berechnet
-        //Distanz von Player zu Obekten, um sich zum Beispiel zu verstecken
-        if(collosionDetection(gameObjectX, gameObjectY) <= 3.5f) {
-            boo = true
-            println("berührung")
-        }
-        return boo
-    }
-
-    /*
-    //Berechnung von Kollision
-    fun checkCollision(gameObjectX: Renderable, gameObjectY: Renderable): Boolean {
-        var boo = false
-        //Distanz von Spieler zu anderen Objekten wird berechnet
-        //Distanz von Player zu Obekten, um sich zum Beispiel zu verstecken
-        if(collosionDetection(gameObjectX, gameObjectY) <= 3f) {
-            distanceEnemy = 100.0f
-            boo = true
-            println("berührung")
-        }
-        return boo
-
-    }*/
-
-    fun onMouseScroll(xoffset: Double, yoffset: Double) {
-       camera.fov += Math.toRadians(yoffset.toFloat())
-   }
 }
-
-
-
