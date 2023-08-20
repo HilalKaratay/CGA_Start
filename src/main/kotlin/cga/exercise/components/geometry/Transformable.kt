@@ -2,6 +2,7 @@ package cga.exercise.components.geometry
 
 import org.joml.Matrix4f
 import org.joml.Vector3f
+import java.beans.beancontext.BeanContextChild
 
 open class Transformable(private var modelMatrix: Matrix4f = Matrix4f(), var parent: Transformable? = null) {
     /**
@@ -18,16 +19,10 @@ open class Transformable(private var modelMatrix: Matrix4f = Matrix4f(), var par
      * Hint: scene graph
      * @return world modelMatrix
      */
-
-
-    //NEU
-    fun setPosition(pos: Vector3f) {
-        modelMatrix.set(3, 0, pos.x)
-        modelMatrix.set(3, 1, pos.y)
-        modelMatrix.set(3, 2, pos.z)
-    }
     fun getWorldModelMatrix(): Matrix4f {
-        return parent?.getWorldModelMatrix()?.mul(getModelMatrix()) ?: getModelMatrix()
+        val worldMatrix = Matrix4f(modelMatrix)
+        parent?.getWorldModelMatrix()?.mul(modelMatrix, worldMatrix)
+        return worldMatrix
     }
 
     /**
@@ -106,7 +101,7 @@ open class Transformable(private var modelMatrix: Matrix4f = Matrix4f(), var par
      */
     fun getXAxis(): Vector3f {
         return Vector3f(
-                modelMatrix.m00(), modelMatrix.m01(), modelMatrix.m02()
+            modelMatrix.m00(), modelMatrix.m01(), modelMatrix.m02()
         ).normalize()
     }
 
@@ -117,7 +112,7 @@ open class Transformable(private var modelMatrix: Matrix4f = Matrix4f(), var par
      */
     fun getYAxis(): Vector3f {
         return Vector3f(
-                modelMatrix.m10(), modelMatrix.m11(), modelMatrix.m12()
+            modelMatrix.m10(), modelMatrix.m11(), modelMatrix.m12()
         ).normalize()
     }
 
@@ -128,7 +123,7 @@ open class Transformable(private var modelMatrix: Matrix4f = Matrix4f(), var par
      */
     fun getZAxis(): Vector3f {
         return Vector3f(
-                modelMatrix.m20(), modelMatrix.m21(), modelMatrix.m22()
+            modelMatrix.m20(), modelMatrix.m21(), modelMatrix.m22()
         ).normalize()
     }
 
@@ -140,7 +135,7 @@ open class Transformable(private var modelMatrix: Matrix4f = Matrix4f(), var par
     fun getWorldXAxis(): Vector3f {
         val wmat = getWorldModelMatrix()
         return Vector3f(
-                wmat.m00(), wmat.m01(), wmat.m02()
+            wmat.m00(), wmat.m01(), wmat.m02()
         ).normalize()
     }
 
@@ -152,7 +147,7 @@ open class Transformable(private var modelMatrix: Matrix4f = Matrix4f(), var par
     fun getWorldYAxis(): Vector3f {
         val wmat = getWorldModelMatrix()
         return Vector3f(
-                wmat.m10(), wmat.m11(), wmat.m12()
+            wmat.m10(), wmat.m11(), wmat.m12()
         ).normalize()
     }
 
@@ -164,7 +159,7 @@ open class Transformable(private var modelMatrix: Matrix4f = Matrix4f(), var par
     fun getWorldZAxis(): Vector3f {
         val wmat = getWorldModelMatrix()
         return Vector3f(
-                wmat.m20(), wmat.m21(), wmat.m22()
+            wmat.m20(), wmat.m21(), wmat.m22()
         ).normalize()
     }
 }

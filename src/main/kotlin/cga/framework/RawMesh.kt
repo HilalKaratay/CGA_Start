@@ -1,4 +1,4 @@
-package cga.framework
+import cga.framework.Vertex
 
 data class RawMesh(
     var vertices: MutableList<Vertex> = mutableListOf(),

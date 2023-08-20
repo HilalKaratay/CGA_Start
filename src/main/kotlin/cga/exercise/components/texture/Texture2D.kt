@@ -1,22 +1,15 @@
+package texture
 
 import cga.exercise.components.texture.ITexture
-import cga.framework.GLError
-import cga.framework.GLError.checkEx
 import org.lwjgl.BufferUtils
-import org.lwjgl.opengl.*
-
-import org.lwjgl.opengl.GL11.*
-import org.lwjgl.opengl.GL13.GL_TEXTURE0
-import org.lwjgl.opengl.GL20.*
-import org.lwjgl.opengl.GL30.glGenerateMipmap
+import org.lwjgl.opengl.EXTTextureFilterAnisotropic
+import org.lwjgl.opengl.GL11
+import org.lwjgl.opengl.GL13
+import org.lwjgl.opengl.GL30
 import org.lwjgl.stb.STBImage
 import java.nio.ByteBuffer
 
-
-/**
- * Created by Fabian on 16.09.2017.
- */
-class Texture2D(imageData: ByteBuffer, width: Int, height: Int, genMipMaps: Boolean): ITexture{
+open class Texture2D (imageData: ByteBuffer, width: Int, height: Int, genMipMaps: Boolean): ITexture {
     private var texID: Int = -1
         private set
 
@@ -52,33 +45,33 @@ class Texture2D(imageData: ByteBuffer, width: Int, height: Int, genMipMaps: Bool
     }
 
     override fun processTexture(imageData: ByteBuffer, width: Int, height: Int, genMipMaps: Boolean) {
-        texID = GL11.glGenTextures()
-        GL11.glBindTexture(GL11.GL_TEXTURE_2D, texID)
-        GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGBA, width, height, 0, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, imageData)
+        texID= GL13.glGenTextures()
+        GL13.glBindTexture(GL13.GL_TEXTURE_2D, texID)
+        GL13.glTexImage2D( GL13.GL_TEXTURE_2D, 0, GL13.GL_RGBA, width, height, 0, GL13.GL_RGBA, GL13.GL_UNSIGNED_BYTE, imageData)
         if(genMipMaps) {
-            GL30.glGenerateMipmap(GL11.GL_TEXTURE_2D)
+            GL30.glGenerateMipmap(GL13.GL_TEXTURE_2D)
         }
+        unbind()
     }
 
     override fun setTexParams(wrapS: Int, wrapT: Int, minFilter: Int, magFilter: Int) {
-        GL11.glBindTexture(GL11.GL_TEXTURE_2D, texID)
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, minFilter)
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, magFilter)
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, wrapS)
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, wrapT)
-        GL11.glTexParameterf(GL11.GL_TEXTURE_2D,
-            EXTTextureFilterAnisotropic.GL_TEXTURE_MAX_ANISOTROPY_EXT,
-            16.0f)
-        GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0)
+        GL13.glBindTexture(GL13.GL_TEXTURE_2D, texID)
+        GL13.glTexParameteri(GL13.GL_TEXTURE_2D, GL13.GL_TEXTURE_WRAP_S, wrapS)
+        GL13.glTexParameteri(GL13.GL_TEXTURE_2D, GL13.GL_TEXTURE_WRAP_T, wrapT)
+        GL13.glTexParameteri(GL13.GL_TEXTURE_2D, GL13.GL_TEXTURE_MAG_FILTER, magFilter)
+        GL13.glTexParameteri(GL13.GL_TEXTURE_2D, GL13.GL_TEXTURE_MIN_FILTER, minFilter)
+
+        GL11.glTexParameterf(GL13.GL_TEXTURE_2D, EXTTextureFilterAnisotropic.GL_TEXTURE_MAX_ANISOTROPY_EXT,16.0f)
+        unbind()
     }
 
     override fun bind(textureUnit: Int) {
-        GL13.glActiveTexture(textureUnit)
-        GL11.glBindTexture(GL11.GL_TEXTURE_2D, texID)
+        GL13.glActiveTexture(GL13.GL_TEXTURE0 + textureUnit)
+        GL13.glBindTexture(GL13.GL_TEXTURE_2D, texID)
     }
 
     override fun unbind() {
-        GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0)
+        GL13.glBindTexture(GL13.GL_TEXTURE_2D, 0)
     }
 
     override fun cleanup() {

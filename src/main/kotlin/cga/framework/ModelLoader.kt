@@ -1,11 +1,10 @@
 package cga.framework
 
-import Texture2D
+import RawMesh
 import cga.exercise.components.geometry.Material
 import cga.exercise.components.geometry.Mesh
 import cga.exercise.components.geometry.Renderable
 import cga.exercise.components.geometry.VertexAttribute
-
 import org.joml.Matrix3f
 import org.joml.Vector2f
 import org.joml.Vector3f
@@ -13,6 +12,7 @@ import org.lwjgl.BufferUtils
 import org.lwjgl.PointerBuffer
 import org.lwjgl.assimp.*
 import org.lwjgl.opengl.GL11
+import texture.Texture2D
 import java.nio.IntBuffer
 import java.util.*
 
@@ -21,7 +21,7 @@ object ModelLoader {
         val rm = RawModel()
         try {
             val aiScene = Assimp.aiImportFile(objPath, Assimp.aiProcess_Triangulate or Assimp.aiProcess_GenNormals)
-                    ?: return null
+                ?: return null
             // read materials
             for (m in 0 until aiScene.mNumMaterials()) {
                 val rmat = RawMaterial()
@@ -29,12 +29,14 @@ object ModelLoader {
                 val sceneMat = aiScene.mMaterials() ?: return null
                 val mat = AIMaterial.create(sceneMat[m])
                 Assimp.aiGetMaterialTexture(mat, Assimp.aiTextureType_DIFFUSE, 0, tpath, null as IntBuffer?, null, null, null, null, null)
+
                 // diffuse texture
                 var tpathj = tpath.dataString()
                 if (rm.textures.contains(tpathj)) rmat.diffTexIndex = rm.textures.indexOf(tpathj) else {
                     rm.textures.add(tpathj)
                     rmat.diffTexIndex = rm.textures.size - 1
                 }
+
                 // specular texture
                 Assimp.aiGetMaterialTexture(mat, Assimp.aiTextureType_SPECULAR, 0, tpath, null as IntBuffer?, null, null, null, null, null)
                 tpathj = tpath.dataString()
@@ -42,6 +44,7 @@ object ModelLoader {
                     rm.textures.add(tpathj)
                     rmat.specTexIndex = rm.textures.size - 1
                 }
+
                 // emissive texture
                 Assimp.aiGetMaterialTexture(mat, Assimp.aiTextureType_EMISSIVE, 0, tpath, null as IntBuffer?, null, null, null, null, null)
                 tpathj = tpath.dataString()
@@ -70,9 +73,9 @@ object ModelLoader {
                     val sceneTextureCoords = aiMesh.mTextureCoords(0) ?: return null
                     val aiTexCoord = if (aiMesh.mNumUVComponents(0) > 0) sceneTextureCoords[v] else null
                     val vert = Vertex(
-                            Vector3f(aiVert.x(), aiVert.y(), aiVert.z()),
-                            if (aiTexCoord != null) Vector2f(aiTexCoord.x(), aiTexCoord.y()) else Vector2f(0.0f, 0.0f),
-                            Vector3f(aiNormal.x(), aiNormal.y(), aiNormal.z())
+                        Vector3f(aiVert.x(), aiVert.y(), aiVert.z()),
+                        if (aiTexCoord != null) Vector2f(aiTexCoord.x(), aiTexCoord.y()) else Vector2f(0.0f, 0.0f),
+                        Vector3f(aiNormal.x(), aiNormal.y(), aiNormal.z())
                     )
                     mesh.vertices.add(vert)
                 }
@@ -162,17 +165,17 @@ object ModelLoader {
         // materials
         for (i in model.materials.indices) {
             materials.add(Material(textures[model.materials[i].diffTexIndex],
-                    textures[model.materials[i].emitTexIndex],
-                    textures[model.materials[i].specTexIndex],
-                    model.materials[i].shininess,
-                    Vector2f(1.0f, 1.0f)))
+                textures[model.materials[i].emitTexIndex],
+                textures[model.materials[i].specTexIndex],
+                model.materials[i].shininess,
+                Vector2f(1.0f, 1.0f)))
         }
         // meshes
         for (i in model.meshes.indices) {
             meshes.add(Mesh(flattenVertexData(model.meshes[i].vertices, rot),
-                    flattenIndexData(model.meshes[i].indices),
-                    vertexAttributes,
-                    materials[model.meshes[i].materialIndex]))
+                flattenIndexData(model.meshes[i].indices),
+                vertexAttributes,
+                materials[model.meshes[i].materialIndex]))
         }
         // assemble the renderable
         return Renderable(meshes)

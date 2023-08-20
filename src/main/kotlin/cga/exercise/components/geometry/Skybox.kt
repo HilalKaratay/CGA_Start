@@ -1,8 +1,5 @@
 import cga.exercise.components.geometry.Transformable
-import cga.exercise.components.shader.ShaderProgram
-import org.joml.Matrix3f
-import org.joml.Matrix4f
-
+/*
 import org.lwjgl.BufferUtils
 import org.lwjgl.opengl.AMDSeamlessCubemapPerTexture
 import org.lwjgl.stb.STBImage
@@ -75,25 +72,6 @@ class Skybox (var vertices: FloatArray, var indices: IntArray): Transformable(){
         glBindBuffer(GL_ARRAY_BUFFER, 0)
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0)
     }
-/*
-    fun render(shader : ShaderProgram, view : Matrix4f, projection: Matrix4f){
-        glActiveTexture(GL_TEXTURE0)
-        glBindVertexArray(skyboxVAO)
-        GL11.glDepthMask(true)
-        shader.use()
-        var newView = Matrix4f(Matrix3f(view))
-        shader.setUniform("view", newView , false)
-        shader.setUniform("projection", projection, false)
-
-        glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTextureID)
-        glDrawElements(GL_TRIANGLES, skyboxIndices.size, GL_UNSIGNED_INT, 0)
-        glBindVertexArray(0)
-
-        glBindVertexArray(0)
-
-    }*/
-
-
 }
-
+*/
 

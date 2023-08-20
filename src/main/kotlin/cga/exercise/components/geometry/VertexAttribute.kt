@@ -12,10 +12,5 @@ data class VertexAttribute(
         var n: Int,
         var type: Int,
         var stride: Int,
-        var offset: Long
+        var offset: Int
 )
-
-data class VertexAttributeSkybox(var index: Int, var size: Int, var type: Int,var normalized: Boolean, var stride: Int, var offset: Long)
-
-//data class VertexAttribute(var index: Int, var size: Int, var type: Int,var normalized: Boolean, var stride: Int, var offset: Long)
-//data class VertexAttribute(var n: Int, var type: Int, var stride: Int, var offset: Int)

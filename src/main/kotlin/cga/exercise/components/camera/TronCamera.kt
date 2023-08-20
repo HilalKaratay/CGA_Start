@@ -1,44 +1,36 @@
 package cga.exercise.components.camera
 
 import cga.exercise.components.geometry.Transformable
-import cga.exercise.components.shader.ShaderProgram
+import org.joml.Math
+
 import org.joml.Matrix4f
+import shader.ShaderProgram
+
 
 /**
  * Created by Fabian on 16.09.2017.
  */
 
-class TronCamera(var aspectratio: Aspectratio = Aspectratio.WIDESCREEN,
-                 var fov: Float = Math.toRadians(90.0).toFloat(),
-                 var near: Float = 0.1f,
-                 var far: Float = 100.0f) : Transformable() {
+class TronCamera(
+    var fieldofview :Float= Math.toRadians(90F),
+    var aspectratio:Float = 16F/9F,
+    var nearplane:Float = 0.1F,
+    var farplane:Float = 100F) : ITron, Transformable() {
 
-
-    //we do a view matrix update only when needed
-    fun calculateViewMatrix(): Matrix4f {
-        return Matrix4f().lookAt(getWorldPosition(), getWorldPosition().sub(getWorldZAxis()), getWorldYAxis())
+    override fun getCalculateViewMatrix(): Matrix4f {
+        return Matrix4f().lookAt(getWorldPosition(),getWorldPosition().sub(getWorldZAxis()),getWorldYAxis())
     }
 
-    fun calculateProjectionMatrix(): Matrix4f {
-        return Matrix4f().perspective(fov, aspectratio.ratio, near, far)
+    override fun getCalculateProjectionMatrix(): Matrix4f {
+        return Matrix4f().perspective(fieldofview,aspectratio,nearplane,farplane)
     }
 
-    fun bind(shader: ShaderProgram) {
-        shader.setUniform("view_matrix", calculateViewMatrix(), false);
-        shader.setUniform("proj_matrix", calculateProjectionMatrix(), false);
+    override fun bind(shader: ShaderProgram) {
+        shader.use()
+
+        shader.setUniform("projection_matrix", getCalculateProjectionMatrix(), false)
+        shader.setUniform("view_matrix", getCalculateViewMatrix(), false)
     }
 
 
-
-}
-
-class Aspectratio(val ratio : Float) {
-
-    companion object {
-        fun custom(width: Int, height: Int) : Aspectratio {
-            return Aspectratio(width/height.toFloat())
-        }
-        val WIDESCREEN = custom(16,9)
-        val OLDSCOOL = custom(4,3)
-    }
 }
