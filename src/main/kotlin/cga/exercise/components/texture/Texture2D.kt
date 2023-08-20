@@ -9,7 +9,7 @@ import org.lwjgl.opengl.GL30
 import org.lwjgl.stb.STBImage
 import java.nio.ByteBuffer
 
-open class Texture2D (imageData: ByteBuffer, width: Int, height: Int, genMipMaps: Boolean): ITexture {
+class Texture2D (imageData: ByteBuffer, width: Int, height: Int, genMipMaps: Boolean): ITexture {
     private var texID: Int = -1
         private set
 
@@ -29,7 +29,7 @@ open class Texture2D (imageData: ByteBuffer, width: Int, height: Int, genMipMaps
             val y = BufferUtils.createIntBuffer(1)
             val readChannels = BufferUtils.createIntBuffer(1)
             //flip y coordinate to make OpenGL happy
-            STBImage.stbi_set_flip_vertically_on_load(true)
+            STBImage.stbi_set_flip_vertically_on_load(false)
             val imageData = STBImage.stbi_load(path, x, y, readChannels, 4)
                 ?: throw Exception("Image file \"" + path + "\" couldn't be read:\n" + STBImage.stbi_failure_reason())
 
