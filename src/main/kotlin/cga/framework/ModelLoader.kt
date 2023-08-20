@@ -138,8 +138,13 @@ object ModelLoader {
         return data
     }
 
-    fun loadModel(objpath: String, pitch: Float, yaw: Float, roll: Float): Renderable? {
-        val model = load(objpath) ?: return null
+
+    fun loadModel(objpath: String): Renderable {
+        return loadModel(objpath, 0f, 0f, 0f)
+    }
+
+    fun loadModel(objpath: String, pitch: Float, yaw: Float, roll: Float): Renderable {
+        val model = load(objpath) ?: throw Exception("cannot load model $objpath")
         val textures = ArrayList<Texture2D>()
         val materials = ArrayList<Material>()
         val meshes = ArrayList<Mesh>()

@@ -11,14 +11,16 @@ import shader.ShaderProgram
 
 class Renderable(val meshes: MutableList<Mesh> = mutableListOf()) : Transformable(parent = null), IRenderable {
 
-    /**
-     * Renders all meshes attached to this Renderable, applying the transformation matrix to
-     * each of them
-     */
     override fun render(shaderProgram: ShaderProgram) {
         shaderProgram.setUniform("model_matrix", getWorldModelMatrix(), false)
         for (m in meshes) {
             m.render(shaderProgram)
+        }
+    }
+
+    fun cleanUp(){
+        for(mesh in meshes){
+            mesh.cleanup()
         }
     }
 }

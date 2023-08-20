@@ -1,9 +1,9 @@
 package game
 
-
 import cga.exercise.components.camera.TronCamera
 import cga.exercise.components.geometry.Material
 import cga.exercise.components.geometry.Mesh
+import cga.exercise.components.geometry.Renderable
 import cga.exercise.components.geometry.VertexAttribute
 import cga.exercise.components.texture.CubemapTexture
 import cga.framework.GLError
@@ -13,9 +13,12 @@ import cga.framework.OBJLoader
 import cga.framework.OBJLoader.loadOBJ
 import org.joml.Vector2f
 import org.joml.Vector3f
+import org.lwjgl.glfw.GLFW
 import org.lwjgl.glfw.GLFW.*
 import org.lwjgl.opengl.ARBVertexArrayObject.glBindVertexArray
+import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL11.*
+import org.lwjgl.opengl.GL12
 import org.lwjgl.opengl.GL13.glActiveTexture
 import org.lwjgl.opengl.GL30
 import shader.ShaderProgram
@@ -25,7 +28,7 @@ import java.awt.SystemColor.window
 class Scene (private val WINDOW: GameWindow) {
 
 
-    /**Skybox**/
+    /**Skybox / Cubemap**/
     // Define Vertices and Indices of Cubemap
     private var size: Float = -20.00f
     private var skyboxVertices: FloatArray = floatArrayOf(
@@ -70,7 +73,6 @@ class Scene (private val WINDOW: GameWindow) {
 
     /**Kamera**/
     val camera = TronCamera()
-    var cameraZoom = TronCamera()
 
     /**Boden**/
     val meshBoden : Mesh
@@ -95,9 +97,7 @@ class Scene (private val WINDOW: GameWindow) {
     private val haus = loadModel("assets/models/Haus/Haus.obj", org.joml.Math.toRadians(0f), org.joml.Math.toRadians(0f), 0f)
     private val hund = loadModel("assets/models/Hund/hund.obj", org.joml.Math.toRadians(0f), org.joml.Math.toRadians(180f), 0f)
     private val katze = loadModel("assets/models/katze/katze.obj", org.joml.Math.toRadians(0f), org.joml.Math.toRadians(180f), 0f)
-    private val bank = loadModel("assets/models/Bank/bank.obj", org.joml.Math.toRadians(0f), org.joml.Math.toRadians(0f), 0f)
-    private val bank2 = loadModel("assets/models/Bank_2/bench2.obj", org.joml.Math.toRadians(0f), org.joml.Math.toRadians(0f), 0f)
-    private val gras = loadModel("assets/models/Gras2/Gras2.obj", org.joml.Math.toRadians(0f), org.joml.Math.toRadians(90f), 0f)
+    private val bank = loadModel("assets/models/Bank/bank.obj", org.joml.Math.toRadians(0f), org.joml.Math.toRadians(180f), 0f)
 
 
     var lastX: Double = WINDOW.mousePos.xpos
@@ -156,26 +156,27 @@ class Scene (private val WINDOW: GameWindow) {
         val matBoden = Material(texDiffBoden, texEmitBoden, texSpecBoden, 60.0f, Vector2f(64F, 64F))
         meshBoden = Mesh(objMeshBoden.vertexData, objMeshBoden.indexData, vertexAttributes, matBoden)
 
-        /**Modelle unterschiedlich plazieren**/
+
+
         baum?.translate(Vector3f(-6f,0f,0f))
         baum2?.translate(Vector3f(5f,0f,-7f))
         baum3?.translate(Vector3f(10f,0f,-3f))
         laterne?.translate(Vector3f(4f,0f,3f))
         laterne2?.translate(Vector3f(-7f,0f,-4f))
-        blume?.translate(Vector3f(-6f,0f,-5f))
-        stein?.translate(Vector3f(-3f,0f,2f))
+        blume?.translate(Vector3f(-17f,0f,-5f))
+        stein?.translate(Vector3f(-7f,0f,5f))
         stein2?.translate(Vector3f(7f,0f,2f))
         haus?.translate(Vector3f(-0f,0f,-5f))
         katze?.translate(Vector3f(-3f,0f,-3f))
-        gras?.translate(Vector3f(-5f,0f,-3f))
-        hund?.translate(Vector3f(4f,0f,-3f))
-        bank?.translate(Vector3f(-6f,0f,-2f))
-        bank2?.translate(Vector3f(6f,0f,-1f))
+        hund?.translate(Vector3f(-1f,0f,-3f))
+        bank?.translate(Vector3f(-3f,0f,-8f))
 
         /**Kamera**/
-        camera.rotate(Math.toRadians((-20f).toDouble()).toFloat(), 0.0, 0.0f)
+        camera.rotate(Math.toRadians(-20.0).toFloat(), 0.0f, 0.0f)
         camera.translate(Vector3f(0.0f, 0.0f, 4.0f))
         camera.parent = figur
+
+
 
     }
 
@@ -196,8 +197,6 @@ class Scene (private val WINDOW: GameWindow) {
         laterne?.render(staticShader)
         laterne2?.render(staticShader)
         bank?.render(staticShader)
-        bank2?.render(staticShader)
-        gras?.render(staticShader)
         meshBoden.render(staticShader)
 
         /**Skybox render**/
@@ -216,11 +215,9 @@ class Scene (private val WINDOW: GameWindow) {
         glDepthFunc(GL_LESS);
 
         camera.bind(staticShader)
-
     }
 
     fun update(dt: Float, t: Float) {
-
 
         if (WINDOW.getKeyState(GLFW_KEY_W)) {
             figur?.translate(Vector3f(0.0f, 0.0f, -100.0f*dt))
@@ -229,9 +226,11 @@ class Scene (private val WINDOW: GameWindow) {
             figur?.translate(Vector3f(0.0f, 0.0f, 100.0f*dt))
         }
 
+        //links
         if (WINDOW.getKeyState(GLFW_KEY_A)) {
             figur?.translate(Vector3f(-50.0f*dt, 0.0f, 0.0f))
         }
+        //rechts
         if (WINDOW.getKeyState(GLFW_KEY_D)) {
             figur?.translate(Vector3f(50.0f*dt, 0.0f, 0.0f))
         }
@@ -242,6 +241,8 @@ class Scene (private val WINDOW: GameWindow) {
     fun onMouseMove(xpos: Double, ypos: Double) {
         camera.rotateAroundPoint(0f, (lastX - xpos).toFloat() * 0.002f, 0f, Vector3f(0f, 0f, 0f))
         lastX = xpos
+
+
     }
 
     fun cleanup() {}

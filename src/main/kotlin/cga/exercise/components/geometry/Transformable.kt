@@ -12,6 +12,15 @@ open class Transformable(private var modelMatrix: Matrix4f = Matrix4f(), var par
         return Matrix4f(modelMatrix)
     }
 
+
+
+
+
+    fun translateGlobal(deltaPos: Vector3f) {
+        val translation_matrix = Matrix4f().translate(deltaPos)
+        modelMatrix = translation_matrix.mul(modelMatrix)
+    }
+
     /**
      * Returns multiplication of world and object model matrices.
      * Multiplication has to be recursive for all parents.
@@ -92,6 +101,13 @@ open class Transformable(private var modelMatrix: Matrix4f = Matrix4f(), var par
         val wmat = getWorldModelMatrix()
         return Vector3f(wmat.m30(), wmat.m31(), wmat.m32())
     }
+
+    fun setPosition(pos: Vector3f) {
+        modelMatrix.set(3, 0, pos.x)
+        modelMatrix.set(3, 1, pos.y)
+        modelMatrix.set(3, 2, pos.z)
+    }
+
 
     /**
      * Returns x-axis of object coordinate system
