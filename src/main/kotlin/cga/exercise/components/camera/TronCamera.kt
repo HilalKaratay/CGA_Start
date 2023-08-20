@@ -13,7 +13,7 @@ import shader.ShaderProgram
 
 class TronCamera(
     var fieldofview:Float= Math.toRadians(90F),
-    var aspectratio: Double = 16F/9F,
+    var aspectratio: Float = 16F/9F,
     var nearplane:Float = 0.1F,
     var farplane:Float = 100F) : ITron, Transformable() {
 

@@ -39,7 +39,7 @@ open class Transformable(private var modelMatrix: Matrix4f = Matrix4f(), var par
      * @param yaw radiant angle around y-axis ccw
      * @param roll radiant angle around z-axis ccw
      */
-    fun rotate(pitch: Float, yaw: Double, roll: Float) {
+    fun rotate(pitch: Float, yaw: Float, roll: Float) {
         modelMatrix.rotateXYZ(pitch, yaw, roll)
     }
 

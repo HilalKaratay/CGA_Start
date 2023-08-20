@@ -1,10 +1,8 @@
 package game
 
+import Collision
 import cga.exercise.components.camera.TronCamera
-import cga.exercise.components.geometry.Material
-import cga.exercise.components.geometry.Mesh
-import cga.exercise.components.geometry.Renderable
-import cga.exercise.components.geometry.VertexAttribute
+import cga.exercise.components.geometry.*
 import cga.exercise.components.texture.CubemapTexture
 import cga.framework.GLError
 import cga.framework.GameWindow
@@ -66,7 +64,6 @@ class Scene (private val WINDOW: GameWindow) {
     private var cubeMap = CubemapTexture(skyboxVertices, skyboxIndices)
     private var cubeMapTexture = glGenTextures()
 
-
     /**Shader**/
     val staticShader = ShaderProgram()
     val skyboxShader = ShaderProgram()
@@ -77,6 +74,11 @@ class Scene (private val WINDOW: GameWindow) {
     /**Boden**/
     val meshBoden : Mesh
 
+
+    val listOfFixObjects = arrayListOf<Renderable>()
+    private val fixObjectList = RenderableList(listOfFixObjects)
+    private var collision = false
+    private val collisionChecker = Collision()
 
     /**Boden Texturen**/
     var texEmitBoden : Texture2D
@@ -158,46 +160,50 @@ class Scene (private val WINDOW: GameWindow) {
 
 
 
-        baum?.translate(Vector3f(-6f,0f,0f))
-        baum2?.translate(Vector3f(5f,0f,-7f))
-        baum3?.translate(Vector3f(10f,0f,-3f))
-        laterne?.translate(Vector3f(4f,0f,3f))
-        laterne2?.translate(Vector3f(-7f,0f,-4f))
-        blume?.translate(Vector3f(-17f,0f,-5f))
-        stein?.translate(Vector3f(-7f,0f,5f))
-        stein2?.translate(Vector3f(7f,0f,2f))
-        haus?.translate(Vector3f(-0f,0f,-5f))
-        katze?.translate(Vector3f(-3f,0f,-3f))
-        hund?.translate(Vector3f(-1f,0f,-3f))
-        bank?.translate(Vector3f(-3f,0f,-8f))
+
+        baum.translate(Vector3f(-6f,0f,0f))
+        baum2.translate(Vector3f(5f,0f,-7f))
+        baum3.translate(Vector3f(10f,0f,-3f))
+        laterne.translate(Vector3f(4f,0f,3f))
+        laterne2.translate(Vector3f(-7f,0f,-4f))
+        blume.translate(Vector3f(-17f,0f,-5f))
+        stein.translate(Vector3f(-7f,0f,5f))
+        stein2.translate(Vector3f(7f,0f,2f))
+        haus.translate(Vector3f(-0f,0f,-5f))
+        katze.translate(Vector3f(-3f,0f,-3f))
+        hund.translate(Vector3f(-1f,0f,-3f))
+        bank.translate(Vector3f(-3f,0f,-8f))
+
+
+        listOfFixObjects.add(baum)
+        listOfFixObjects.add(baum2)
+        listOfFixObjects.add(baum3)
+        listOfFixObjects.add(laterne)
+        listOfFixObjects.add(laterne2)
+        listOfFixObjects.add(blume)
+        listOfFixObjects.add(stein)
+        listOfFixObjects.add(stein2)
+        listOfFixObjects.add(haus)
+        listOfFixObjects.add(katze)
+        listOfFixObjects.add(hund)
+        listOfFixObjects.add(bank)
 
         /**Kamera**/
         camera.rotate(Math.toRadians(-20.0).toFloat(), 0.0f, 0.0f)
         camera.translate(Vector3f(0.0f, 0.0f, 4.0f))
         camera.parent = figur
 
-
-
     }
 
     fun render(dt: Float, t: Float) {
         glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
 
+
+
         /**Modell render**/
-        figur?.render(staticShader)
-        baum?.render(staticShader)
-        baum2?.render(staticShader)
-        baum3?.render(staticShader)
-        blume?.render(staticShader)
-        haus?.render(staticShader)
-        katze?.render(staticShader)
-        hund?.render(staticShader)
-        stein?.render(staticShader)
-        stein2?.render(staticShader)
-        laterne?.render(staticShader)
-        laterne2?.render(staticShader)
-        bank?.render(staticShader)
+        figur.render(staticShader)
         meshBoden.render(staticShader)
+        fixObjectList.renderListOfObjects(staticShader)
 
         /**Skybox render**/
         glDepthFunc(GL_LEQUAL)
@@ -234,6 +240,13 @@ class Scene (private val WINDOW: GameWindow) {
         if (WINDOW.getKeyState(GLFW_KEY_D)) {
             figur?.translate(Vector3f(50.0f*dt, 0.0f, 0.0f))
         }
+
+        if (collisionChecker.checkCollision(figur, listOfFixObjects)) {
+            collision = true
+           figur.translate(Vector3f(20.0f,0.0f,0.0f))
+
+        }
+
     }
 
     fun onKey(key: Int, scancode: Int, action: Int, mode: Int) {}
