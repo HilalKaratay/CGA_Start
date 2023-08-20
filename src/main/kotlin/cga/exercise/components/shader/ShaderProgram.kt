@@ -104,4 +104,14 @@ class ShaderProgram {
         return false
     }
 
+    fun setUniform(name: String, value1: Float, value2 : Float, value3 : Float) : Boolean{
+        if(programID == 0) return false
+        val loc = GL20.glGetUniformLocation(programID, name)
+        if (loc != -1){
+            GL20.glUniform3f(loc, value1, value2, value3)
+            return true
+        }
+        return false
+    }
+
 }

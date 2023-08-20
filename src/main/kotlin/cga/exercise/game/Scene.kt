@@ -3,6 +3,8 @@ package game
 import Collision
 import cga.exercise.components.camera.TronCamera
 import cga.exercise.components.geometry.*
+import cga.exercise.components.light.PointLight
+import cga.exercise.components.light.SpotLight
 import cga.exercise.components.texture.CubemapTexture
 import cga.framework.GLError
 import cga.framework.GameWindow
@@ -80,6 +82,9 @@ class Scene (private val WINDOW: GameWindow) {
     private var collision = false
     private val collisionChecker = Collision()
 
+
+    private val pointLight : PointLight
+
     /**Boden Texturen**/
     var texEmitBoden : Texture2D
     var texDiffBoden : Texture2D
@@ -127,7 +132,21 @@ class Scene (private val WINDOW: GameWindow) {
             )
         )
 
-        cubeMapTexture = cubeMap.loadCubeMap(facesCubeMap)
+        val facesCubeMapNight: ArrayList<String> = arrayListOf()
+        facesCubeMapNight.addAll(
+            listOf(
+                "assets/textures/skybox/night/right.png",
+                "assets/textures/skybox/night/left.png",
+                "assets/textures/skybox/night/top.png",
+                "assets/textures/skybox/night/bottom.png",
+                "assets/textures/skybox/night/front.png",
+                "assets/textures/skybox/night/back.png"
+
+            )
+        )
+
+
+        cubeMapTexture = cubeMap.loadCubeMap(facesCubeMapNight)
 
         //initial opengl state
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f); GLError.checkThrow()
@@ -165,7 +184,7 @@ class Scene (private val WINDOW: GameWindow) {
         baum2.translate(Vector3f(5f,0f,-7f))
         baum3.translate(Vector3f(10f,0f,-3f))
         laterne.translate(Vector3f(4f,0f,3f))
-        laterne2.translate(Vector3f(-7f,0f,-4f))
+       // laterne2.translate(Vector3f(-7f,0f,-4f))
         blume.translate(Vector3f(-17f,0f,-5f))
         stein.translate(Vector3f(-7f,0f,5f))
         stein2.translate(Vector3f(7f,0f,2f))
@@ -179,7 +198,7 @@ class Scene (private val WINDOW: GameWindow) {
         listOfFixObjects.add(baum2)
         listOfFixObjects.add(baum3)
         listOfFixObjects.add(laterne)
-        listOfFixObjects.add(laterne2)
+        //listOfFixObjects.add(laterne2)
         listOfFixObjects.add(blume)
         listOfFixObjects.add(stein)
         listOfFixObjects.add(stein2)
@@ -193,18 +212,19 @@ class Scene (private val WINDOW: GameWindow) {
         camera.translate(Vector3f(0.0f, 0.0f, 4.0f))
         camera.parent = figur
 
+        pointLight = PointLight(Vector3f(0.0f, 1.0f, 0.0f), Vector3f(1.0f, 0.0f, 0.0f), Vector3f(0.0f, 0.0f, 0.0f))
+        pointLight.parent = laterne
     }
 
     fun render(dt: Float, t: Float) {
         glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
-
-
 
         /**Modell render**/
         figur.render(staticShader)
         meshBoden.render(staticShader)
         fixObjectList.renderListOfObjects(staticShader)
 
+        pointLight.bind(staticShader, "PointLight")
         /**Skybox render**/
         glDepthFunc(GL_LEQUAL)
         skyboxShader.use()
