@@ -24,6 +24,7 @@ import org.lwjgl.opengl.GL30
 import shader.ShaderProgram
 import texture.Texture2D
 import java.awt.SystemColor.window
+import kotlin.math.sqrt
 
 class Scene (private val WINDOW: GameWindow) {
 
@@ -32,14 +33,14 @@ class Scene (private val WINDOW: GameWindow) {
     // Define Vertices and Indices of Cubemap
     private var size: Float = -20.00f
     private var skyboxVertices: FloatArray = floatArrayOf(
-        -size, -size,  size,
-         size, -size,  size,
-         size, -size, -size,
+        -size, -size, size,
+        size, -size, size,
+        size, -size, -size,
         -size, -size, -size,
-        -size,  size,  size,
-         size,  size,  size,
-         size,  size, -size,
-        -size,  size, -size
+        -size, size, size,
+        size, size, size,
+        size, size, -size,
+        -size, size, -size
     )
 
     private var skyboxIndices: IntArray = intArrayOf(
@@ -74,37 +75,51 @@ class Scene (private val WINDOW: GameWindow) {
     val camera = TronCamera()
 
     /**Boden**/
-    val meshBoden : Mesh
+    val meshBoden: Mesh
 
 
     val listOfFixObjects = arrayListOf<Renderable>()
     private val fixObjectList = RenderableList(listOfFixObjects)
     private var collision = false
     private val collisionChecker = Collision()
+    var playerSpeed = 5f
 
 
-    private val pointLight : PointLight
+    private val pointLight: PointLight
 
     /**Boden Texturen**/
-    var texEmitBoden : Texture2D
-    var texDiffBoden : Texture2D
-    var texSpecBoden : Texture2D
+    var texEmitBoden: Texture2D
+    var texDiffBoden: Texture2D
+    var texSpecBoden: Texture2D
 
     /**Modelle**/
-    private val figur = loadModel("assets/models/Figur/figur.obj", org.joml.Math.toRadians(0f), org.joml.Math.toRadians(180f), 0f)
-    private val baum = loadModel("assets/models/Baum/Baum.obj", org.joml.Math.toRadians(-90f), org.joml.Math.toRadians(90f), 0f)
-    private val baum2 = loadModel("assets/models/Baum_2/baum_2.obj", org.joml.Math.toRadians(0f), org.joml.Math.toRadians(90f), 0f)
-    private val baum3 = loadModel("assets/models/Baum/Baum.obj", org.joml.Math.toRadians(-90f), org.joml.Math.toRadians(0f), 0f)
-    private val laterne = loadModel("assets/models/Laterne/Laterne.obj", org.joml.Math.toRadians(0f), org.joml.Math.toRadians(90f), 0f)
-    private val laterne2 = loadModel("assets/models/Laterne/Laterne.obj", org.joml.Math.toRadians(0f), org.joml.Math.toRadians(90f), 0f)
-    private val stein = loadModel("assets/models/Stein/stein.obj", org.joml.Math.toRadians(0f), org.joml.Math.toRadians(90f), 0f)
-    private val stein2 = loadModel("assets/models/Stein2/stein2.obj", org.joml.Math.toRadians(0f), org.joml.Math.toRadians(90f), 0f)
+    private val figur =
+        loadModel("assets/models/Figur/figur.obj", org.joml.Math.toRadians(0f), org.joml.Math.toRadians(180f), 0f)
+    private val baum =
+        loadModel("assets/models/Baum/Baum.obj", org.joml.Math.toRadians(-90f), org.joml.Math.toRadians(90f), 0f)
+    private val baum2 =
+        loadModel("assets/models/Baum_2/baum_2.obj", org.joml.Math.toRadians(0f), org.joml.Math.toRadians(90f), 0f)
+    private val baum3 =
+        loadModel("assets/models/Baum/Baum.obj", org.joml.Math.toRadians(-90f), org.joml.Math.toRadians(0f), 0f)
+    private val laterne =
+        loadModel("assets/models/Laterne/Laterne.obj", org.joml.Math.toRadians(0f), org.joml.Math.toRadians(90f), 0f)
+    private val laterne2 =
+        loadModel("assets/models/Laterne/Laterne.obj", org.joml.Math.toRadians(0f), org.joml.Math.toRadians(90f), 0f)
+    private val stein =
+        loadModel("assets/models/Stein/stein.obj", org.joml.Math.toRadians(0f), org.joml.Math.toRadians(90f), 0f)
+    private val stein2 =
+        loadModel("assets/models/Stein2/stein2.obj", org.joml.Math.toRadians(0f), org.joml.Math.toRadians(90f), 0f)
 
-    private val blume = loadModel("assets/models/Blume/Blume.obj", org.joml.Math.toRadians(0f), org.joml.Math.toRadians(90f), 0f)
-    private val haus = loadModel("assets/models/Haus/Haus.obj", org.joml.Math.toRadians(0f), org.joml.Math.toRadians(0f), 0f)
-    private val hund = loadModel("assets/models/Hund/hund.obj", org.joml.Math.toRadians(0f), org.joml.Math.toRadians(180f), 0f)
-    private val katze = loadModel("assets/models/katze/katze.obj", org.joml.Math.toRadians(0f), org.joml.Math.toRadians(180f), 0f)
-    private val bank = loadModel("assets/models/Bank/bank.obj", org.joml.Math.toRadians(0f), org.joml.Math.toRadians(180f), 0f)
+    private val blume =
+        loadModel("assets/models/Blume/Blume.obj", org.joml.Math.toRadians(0f), org.joml.Math.toRadians(90f), 0f)
+    private val haus =
+        loadModel("assets/models/Haus/Haus.obj", org.joml.Math.toRadians(0f), org.joml.Math.toRadians(0f), 0f)
+    private val hund =
+        loadModel("assets/models/Hund/hund.obj", org.joml.Math.toRadians(0f), org.joml.Math.toRadians(180f), 0f)
+    private val katze =
+        loadModel("assets/models/katze/katze.obj", org.joml.Math.toRadians(0f), org.joml.Math.toRadians(180f), 0f)
+    private val bank =
+        loadModel("assets/models/Bank/bank.obj", org.joml.Math.toRadians(0f), org.joml.Math.toRadians(180f), 0f)
 
 
     var lastX: Double = WINDOW.mousePos.xpos
@@ -180,18 +195,18 @@ class Scene (private val WINDOW: GameWindow) {
 
 
 
-        baum.translate(Vector3f(-6f,0f,0f))
-        baum2.translate(Vector3f(5f,0f,-7f))
-        baum3.translate(Vector3f(10f,0f,-3f))
-        laterne.translate(Vector3f(4f,0f,3f))
-       // laterne2.translate(Vector3f(-7f,0f,-4f))
-        blume.translate(Vector3f(-17f,0f,-5f))
-        stein.translate(Vector3f(-7f,0f,5f))
-        stein2.translate(Vector3f(7f,0f,2f))
-        haus.translate(Vector3f(-0f,0f,-5f))
-        katze.translate(Vector3f(-3f,0f,-3f))
-        hund.translate(Vector3f(-1f,0f,-3f))
-        bank.translate(Vector3f(-3f,0f,-8f))
+        baum.translate(Vector3f(-6f, 0f, 0f))
+        baum2.translate(Vector3f(5f, 0f, -7f))
+        baum3.translate(Vector3f(10f, 0f, -3f))
+        laterne.translate(Vector3f(4f, 0f, 3f))
+        // laterne2.translate(Vector3f(-7f,0f,-4f))
+        blume.translate(Vector3f(-17f, 0f, -5f))
+        stein.translate(Vector3f(-7f, 0f, 5f))
+        stein2.translate(Vector3f(7f, 0f, 2f))
+        haus.translate(Vector3f(-0f, 0f, -5f))
+        katze.translate(Vector3f(-3f, 0f, -3f))
+        hund.translate(Vector3f(-1f, 0f, -3f))
+        bank.translate(Vector3f(-3f, 0f, -8f))
 
 
         listOfFixObjects.add(baum)
@@ -246,28 +261,30 @@ class Scene (private val WINDOW: GameWindow) {
     fun update(dt: Float, t: Float) {
 
         if (WINDOW.getKeyState(GLFW_KEY_W)) {
-            figur?.translate(Vector3f(0.0f, 0.0f, -100.0f*dt))
+            figur?.translate(Vector3f(0.0f, 0.0f, -playerSpeed * dt))
         }
         if (WINDOW.getKeyState(GLFW_KEY_S)) {
-            figur?.translate(Vector3f(0.0f, 0.0f, 100.0f*dt))
+            figur?.translate(Vector3f(0.0f, 0.0f, playerSpeed * dt))
         }
 
         //links
         if (WINDOW.getKeyState(GLFW_KEY_A)) {
-            figur?.translate(Vector3f(-50.0f*dt, 0.0f, 0.0f))
+            figur?.translate(Vector3f(-playerSpeed * dt, 0.0f, 0.0f))
         }
         //rechts
         if (WINDOW.getKeyState(GLFW_KEY_D)) {
-            figur?.translate(Vector3f(50.0f*dt, 0.0f, 0.0f))
+            figur?.translate(Vector3f(playerSpeed * dt, 0.0f, 0.0f))
         }
 
         if (collisionChecker.checkCollision(figur, listOfFixObjects)) {
             collision = true
-           figur.translate(Vector3f(20.0f,0.0f,0.0f))
-
+            playerSpeed = 0.1f
+            // figur.translate(Vector3f(20.0f,0.0f,0.0f))
+            println("collision detectet")
         }
 
     }
+
 
     fun onKey(key: Int, scancode: Int, action: Int, mode: Int) {}
 
