@@ -4,7 +4,6 @@ import Collision
 import cga.exercise.components.camera.TronCamera
 import cga.exercise.components.geometry.*
 import cga.exercise.components.light.PointLight
-import cga.exercise.components.light.SpotLight
 import cga.exercise.components.texture.CubemapTexture
 import cga.framework.GLError
 import cga.framework.GameWindow
@@ -13,18 +12,16 @@ import cga.framework.OBJLoader
 import cga.framework.OBJLoader.loadOBJ
 import org.joml.Vector2f
 import org.joml.Vector3f
-import org.lwjgl.glfw.GLFW
 import org.lwjgl.glfw.GLFW.*
 import org.lwjgl.opengl.ARBVertexArrayObject.glBindVertexArray
 import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL11.*
-import org.lwjgl.opengl.GL12
-import org.lwjgl.opengl.GL13.glActiveTexture
+import org.lwjgl.opengl.GL13
+import org.lwjgl.opengl.GL13.GL_TEXTURE_CUBE_MAP
 import org.lwjgl.opengl.GL30
 import shader.ShaderProgram
 import texture.Texture2D
-import java.awt.SystemColor.window
-import kotlin.math.sqrt
+
 
 class Scene (private val WINDOW: GameWindow) {
 
@@ -65,11 +62,19 @@ class Scene (private val WINDOW: GameWindow) {
     )
 
     private var cubeMap = CubemapTexture(skyboxVertices, skyboxIndices)
+    private var cubeMapNight =CubemapTexture(skyboxVertices,skyboxIndices)
     private var cubeMapTexture = glGenTextures()
+    private var cubeMapNightTexture = glGenTextures()
+
+    private var fogColour = 0
+
 
     /**Shader**/
     val staticShader = ShaderProgram()
     val skyboxShader = ShaderProgram()
+
+    private var time = 6f
+
 
     /**Kamera**/
     val camera = TronCamera()
@@ -109,7 +114,6 @@ class Scene (private val WINDOW: GameWindow) {
         loadModel("assets/models/Stein/stein.obj", org.joml.Math.toRadians(0f), org.joml.Math.toRadians(90f), 0f)
     private val stein2 =
         loadModel("assets/models/Stein2/stein2.obj", org.joml.Math.toRadians(0f), org.joml.Math.toRadians(90f), 0f)
-
     private val blume =
         loadModel("assets/models/Blume/Blume.obj", org.joml.Math.toRadians(0f), org.joml.Math.toRadians(90f), 0f)
     private val haus =
@@ -126,7 +130,6 @@ class Scene (private val WINDOW: GameWindow) {
 
 
     init {
-
         /**Shader**/
         staticShader.shader("assets/shaders/third_vert.glsl", "assets/shaders/third_frag.glsl")
         staticShader.use()
@@ -134,7 +137,8 @@ class Scene (private val WINDOW: GameWindow) {
         skyboxShader.shader("assets/shaders/skybox_vert.glsl", "assets/shaders/skybox_frag.glsl")
         skyboxShader.use()
 
-        /**Loading Skybox textur**/
+
+        /**Loading Skybox texture**/
         val facesCubeMap: ArrayList<String> = arrayListOf()
         facesCubeMap.addAll(
             listOf(
@@ -161,7 +165,11 @@ class Scene (private val WINDOW: GameWindow) {
         )
 
 
-        cubeMapTexture = cubeMap.loadCubeMap(facesCubeMapNight)
+        cubeMapTexture = cubeMap.loadCubeMap(facesCubeMap)
+        //glBindTexture(GL_TEXTURE_CUBE_MAP,cubeMapTexture)
+        cubeMapNightTexture =cubeMapNight.loadCubeMap(facesCubeMapNight)
+
+
 
         //initial opengl state
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f); GLError.checkThrow()
@@ -182,24 +190,22 @@ class Scene (private val WINDOW: GameWindow) {
         val resBoden = loadOBJ("assets/models/ground.obj")
         val objMeshBoden: OBJLoader.OBJMesh = resBoden.objects[0].meshes[0]
 
-        texEmitBoden = Texture2D("assets/textures/boden_textur.png", true)
+        texEmitBoden = Texture2D("assets/textures/grass2.png", true)
         texEmitBoden.setTexParams(GL_REPEAT, GL_REPEAT, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR_MIPMAP_LINEAR)
-        texDiffBoden = Texture2D("assets/textures/boden_textur.png", false)
+        texDiffBoden = Texture2D("assets/textures/grass2.png", false)
         texDiffBoden.setTexParams(GL_REPEAT, GL_REPEAT, GL_LINEAR, GL_LINEAR)
-        texSpecBoden = Texture2D("assets/textures/boden_textur.png", false)
+        texSpecBoden = Texture2D("assets/textures/grass2.png", false)
         texSpecBoden.setTexParams(GL_REPEAT, GL_REPEAT, GL_LINEAR, GL_LINEAR)
 
         val matBoden = Material(texDiffBoden, texEmitBoden, texSpecBoden, 60.0f, Vector2f(64F, 64F))
         meshBoden = Mesh(objMeshBoden.vertexData, objMeshBoden.indexData, vertexAttributes, matBoden)
 
 
-
-
         baum.translate(Vector3f(-6f, 0f, 0f))
         baum2.translate(Vector3f(5f, 0f, -7f))
         baum3.translate(Vector3f(10f, 0f, -3f))
         laterne.translate(Vector3f(4f, 0f, 3f))
-        // laterne2.translate(Vector3f(-7f,0f,-4f))
+        laterne2.translate(Vector3f(-7f,0f,-4f))
         blume.translate(Vector3f(-17f, 0f, -5f))
         stein.translate(Vector3f(-7f, 0f, 5f))
         stein2.translate(Vector3f(7f, 0f, 2f))
@@ -213,7 +219,7 @@ class Scene (private val WINDOW: GameWindow) {
         listOfFixObjects.add(baum2)
         listOfFixObjects.add(baum3)
         listOfFixObjects.add(laterne)
-        //listOfFixObjects.add(laterne2)
+        listOfFixObjects.add(laterne2)
         listOfFixObjects.add(blume)
         listOfFixObjects.add(stein)
         listOfFixObjects.add(stein2)
@@ -233,6 +239,7 @@ class Scene (private val WINDOW: GameWindow) {
 
     fun render(dt: Float, t: Float) {
         glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
+       // setTimer(shaderWechsel)
 
         /**Modell render**/
         figur.render(staticShader)
@@ -242,16 +249,14 @@ class Scene (private val WINDOW: GameWindow) {
         pointLight.bind(staticShader, "PointLight")
         /**Skybox render**/
         glDepthFunc(GL_LEQUAL)
-        skyboxShader.use()
 
+        skyboxShader.use()
         skyboxShader.setUniform("view", camera.getCalculateViewMatrix(), false)
         skyboxShader.setUniform("projection", camera.getCalculateProjectionMatrix(), false)
 
         glBindVertexArray(cubeMap.skyboxVAO)
-        glActiveTexture(GL30.GL_TEXTURE0)
-        glBindTexture(GL30.GL_TEXTURE_CUBE_MAP, cubeMapTexture)
         glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0)
-
+        bindTextures()
         glBindVertexArray(0);
         glDepthFunc(GL_LESS);
 
@@ -261,19 +266,19 @@ class Scene (private val WINDOW: GameWindow) {
     fun update(dt: Float, t: Float) {
 
         if (WINDOW.getKeyState(GLFW_KEY_W)) {
-            figur?.translate(Vector3f(0.0f, 0.0f, -playerSpeed * dt))
+            figur.translate(Vector3f(0.0f, 0.0f, -playerSpeed * dt))
         }
         if (WINDOW.getKeyState(GLFW_KEY_S)) {
-            figur?.translate(Vector3f(0.0f, 0.0f, playerSpeed * dt))
+            figur.translate(Vector3f(0.0f, 0.0f, playerSpeed * dt))
         }
 
         //links
         if (WINDOW.getKeyState(GLFW_KEY_A)) {
-            figur?.translate(Vector3f(-playerSpeed * dt, 0.0f, 0.0f))
+            figur.translate(Vector3f(-playerSpeed * dt, 0.0f, 0.0f))
         }
         //rechts
         if (WINDOW.getKeyState(GLFW_KEY_D)) {
-            figur?.translate(Vector3f(playerSpeed * dt, 0.0f, 0.0f))
+            figur.translate(Vector3f(playerSpeed * dt, 0.0f, 0.0f))
         }
 
         if (collisionChecker.checkCollision(figur, listOfFixObjects)) {
@@ -295,6 +300,29 @@ class Scene (private val WINDOW: GameWindow) {
 
     }
 
+    //Zeitberchnen für shaderwechsel
+    private fun bindTextures(){
+        GL13.glActiveTexture(GL13.GL_TEXTURE0)
+        glBindTexture(GL13.GL_TEXTURE_CUBE_MAP,cubeMapTexture)
+        GL13.glActiveTexture(GL13.GL_TEXTURE1)
+        glBindTexture(GL13.GL_TEXTURE_CUBE_MAP,cubeMapNightTexture)
+
+        time + 8.0f
+        time %= 24f
+        val dayTexture: Int
+        val nightTexture: Int
+        if (time >= 0 && time < 12) {
+            dayTexture = cubeMapTexture
+        } else if (time >= 13 && time < 24) {
+            nightTexture = cubeMapNightTexture
+        }else {
+            nightTexture = cubeMapNightTexture
+        }
+
+    }
+
+
     fun cleanup() {}
+
 
 }

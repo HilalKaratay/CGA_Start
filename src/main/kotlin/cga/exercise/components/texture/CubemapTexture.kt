@@ -16,6 +16,7 @@ class CubemapTexture(var vertices: FloatArray, var indices: IntArray): Transform
     var skyboxVBO = GL30.glGenBuffers()
     var skyboxIBO = GL30.glGenBuffers()
     var cubeMaptexID = GL30.glGenTextures()
+    var cubemapTextureNight =GL30.glGenTextures()
 
 
     fun loadCubeMap(faces: ArrayList<String>) : Int {
@@ -35,6 +36,7 @@ class CubemapTexture(var vertices: FloatArray, var indices: IntArray): Transform
         glBindVertexArray(0)
         glBindBuffer(GL30.GL_ELEMENT_ARRAY_BUFFER, 0)
         glBindTexture(GL30.GL_TEXTURE_CUBE_MAP, cubeMaptexID)
+        //glBindTexture(GL30.GL_TEXTURE_CUBE_MAP,cubemapTextureNight)
 
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
@@ -56,6 +58,7 @@ class CubemapTexture(var vertices: FloatArray, var indices: IntArray): Transform
             GL30.glTexImage2D(GL30.GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL30.GL_RGBA8, x.get(), y.get(), 0, GL30.GL_RGBA, GL30.GL_UNSIGNED_BYTE, imageData)
             STBImage.stbi_image_free(imageData)
         }
+
         return cubeMaptexID
     }
 

@@ -2,6 +2,7 @@ package shader
 
 import org.joml.Matrix4f
 import org.joml.Vector2f
+import org.joml.Vector3f
 import org.lwjgl.BufferUtils
 import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL20
@@ -109,6 +110,16 @@ class ShaderProgram {
         val loc = GL20.glGetUniformLocation(programID, name)
         if (loc != -1){
             GL20.glUniform3f(loc, value1, value2, value3)
+            return true
+        }
+        return false
+    }
+
+    fun setUniform(name: String, value: Vector3f): Boolean {
+        if (programID == 0) return false
+        val loc = GL20.glGetUniformLocation(programID, name)
+        if (loc != -1) {
+            GL20.glUniform3f(loc, value.x, value.y, value.z)
             return true
         }
         return false
