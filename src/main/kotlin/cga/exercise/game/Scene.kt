@@ -68,7 +68,6 @@ class Scene (private val WINDOW: GameWindow) {
 
 
     /**Shader**/
-
     var tronShader =ShaderProgram()
     var staticShader = tronShader
     val toonShader = ShaderProgram()
@@ -81,12 +80,7 @@ class Scene (private val WINDOW: GameWindow) {
     val camera = TronCamera()
     val camerafirstperson = TronCamera()
 
-
-    /**Boden**/
-    val meshBoden: Mesh
-
-
-
+    /**Collision**/
     val spawnTiere =SpawnTiere()
     val listOfFixObjects = arrayListOf<Renderable>()
     private val fixObjectList = RenderableList(listOfFixObjects)
@@ -94,13 +88,15 @@ class Scene (private val WINDOW: GameWindow) {
     private val collisionChecker = Collision()
     var playerSpeed = 5f
 
-
+    /**Licht**/
     private val pointLight: PointLight
     private val pointLightList = mutableListOf<PointLight>()
 
     private val bikeSpotLight :SpotLight
     private val spotLightList = mutableListOf<SpotLight>()
 
+    /**Boden**/
+    val meshBoden: Mesh
 
     /**Boden Texturen**/
     var texEmitBoden: Texture2D
@@ -116,6 +112,8 @@ class Scene (private val WINDOW: GameWindow) {
         loadModel("assets/models/Baum_2/baum_2.obj", org.joml.Math.toRadians(0f), org.joml.Math.toRadians(90f), 0f)
     private val baum3 =
         loadModel("assets/models/Baum/Baum.obj", org.joml.Math.toRadians(-90f), org.joml.Math.toRadians(0f), 0f)
+    private val baum4 =
+        loadModel("assets/models/Baum_2/baum_2.obj", org.joml.Math.toRadians(0f), org.joml.Math.toRadians(90f), 0f)
     private val laterne =
         loadModel("assets/models/Laterne/Laterne.obj", org.joml.Math.toRadians(0f), org.joml.Math.toRadians(90f), 0f)
     private val laterne2 =
@@ -138,6 +136,10 @@ class Scene (private val WINDOW: GameWindow) {
         loadModel("assets/models/Bank2/bench2.obj", org.joml.Math.toRadians(0f), org.joml.Math.toRadians(180f), 0f)
     private val brunnen =
         loadModel("assets/models/Brunnen/Brunnen.obj", org.joml.Math.toRadians(0f), org.joml.Math.toRadians(180f), 0f)
+    private val busch =
+        loadModel("assets/models/Busch/Busch.obj", org.joml.Math.toRadians(0f), org.joml.Math.toRadians(0f), 0f)
+    private val busch2 =
+        loadModel("assets/models/Busch/Busch.obj", org.joml.Math.toRadians(0f), org.joml.Math.toRadians(0f), 0f)
     private val zaun=
         loadModel("assets/models/Zaun/13076_Gothic_Wood_Fence_Panel_v2_l3.obj",org.joml.Math.toRadians(-90f), org.joml.Math.toRadians(0f), 0f)
     private val zaun1=
@@ -162,9 +164,7 @@ class Scene (private val WINDOW: GameWindow) {
         loadModel("assets/models/Zaun/13076_Gothic_Wood_Fence_Panel_v2_l3.obj",org.joml.Math.toRadians(-90f), org.joml.Math.toRadians(360f), 0f)
     private val zaunhinten3=
         loadModel("assets/models/Zaun/13076_Gothic_Wood_Fence_Panel_v2_l3.obj",org.joml.Math.toRadians(-90f), org.joml.Math.toRadians(360f), 0f)
-
-
-
+    
 
     var lastX: Double = WINDOW.mousePos.xpos
 
@@ -173,9 +173,7 @@ class Scene (private val WINDOW: GameWindow) {
         /**Shader**/
         staticShader.shader("assets/shaders/third_vert.glsl", "assets/shaders/third_frag.glsl")
         staticShader.use()
-
         toonShader.shader("assets/shaders/toon_vert.glsl", "assets/shaders/toon_frag.glsl")
-
         skyboxShader.shader("assets/shaders/skybox_vert.glsl", "assets/shaders/skybox_frag.glsl")
         skyboxShader.use()
 
@@ -202,15 +200,12 @@ class Scene (private val WINDOW: GameWindow) {
                 "assets/textures/skybox/night/bottom.png",
                 "assets/textures/skybox/night/front.png",
                 "assets/textures/skybox/night/back.png"
-
             )
         )
 
         cubeMapTexture = cubeMap.loadCubeMap(facesCubeMap)
         //glBindTexture(GL_TEXTURE_CUBE_MAP,cubeMapTexture)
         cubeMapNightTexture =cubeMapNight.loadCubeMap(facesCubeMapNight)
-
-
 
         //initial opengl state
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f); GLError.checkThrow()
@@ -219,7 +214,6 @@ class Scene (private val WINDOW: GameWindow) {
         glCullFace(GL_BACK); GLError.checkThrow() // Es werden alle Dreiecke verworfen, die nach hinten zeigen
         glEnable(GL_DEPTH_TEST); GLError.checkThrow()
         glDepthFunc(GL_LEQUAL); GLError.checkThrow()
-
 
         /**load OBJ Object**/
         val attrPos = VertexAttribute(3, GL_FLOAT, 32, 0)
@@ -243,11 +237,14 @@ class Scene (private val WINDOW: GameWindow) {
 
 
         baum.translate(Vector3f(5f, 0f, -0f))
-        baum2.translate(Vector3f(-6f, 0f, -3f))
-        baum3.translate(Vector3f(10f, 0f, -3f))
+        baum2.translate(Vector3f(-6f, 0f, -1f))
+        baum3.translate(Vector3f(-8f, 0f, -13f))
+        baum4.translate(Vector3f(12f, 0f, -12f))
+        busch.translate(Vector3f(2.2f, 0f, -9.3f))
+        busch2.translate(Vector3f(-2.7f, 0f, -9.3f))
         laterne.translate(Vector3f(-5f, 0f, -8f))
-        laterne2.translate(Vector3f(-7f,0f,-4f))
-        blume.translate(Vector3f(-17f, 0f, -5f))
+        laterne2.translate(Vector3f(10f,0f,-7f))
+        blume.translate(Vector3f(-6f, 0f, -2f))
         stein.translate(Vector3f(-7f, 0f, 5f))
         stein2.translate(Vector3f(7f, 0f, 2f))
         haus.translate(Vector3f(0f, 0f, -9f))
@@ -284,13 +281,15 @@ class Scene (private val WINDOW: GameWindow) {
         zaunhinten3.scale(Vector3f(0.01f, 0.01f, 0.01f))
 
 
-
         listOfFixObjects.add(baum)
         listOfFixObjects.add(baum2)
-      //  listOfFixObjects.add(baum3)
+        listOfFixObjects.add(baum3)
+        listOfFixObjects.add(baum4)
         listOfFixObjects.add(laterne)
-      //  listOfFixObjects.add(laterne2)
-      //  listOfFixObjects.add(blume)
+        listOfFixObjects.add(laterne2)
+        listOfFixObjects.add(blume)
+        listOfFixObjects.add(busch)
+        listOfFixObjects.add(busch2)
       //  listOfFixObjects.add(stein)
       //  listOfFixObjects.add(stein2)
         listOfFixObjects.add(haus)
