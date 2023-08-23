@@ -1,0 +1,24 @@
+# Blender MTL File: 'Water Fountain_lowpoly.blend'
+# Material Count: 2
+
+newmtl blau
+Ns 250.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.024295 0.168680 0.800000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd blau.png
+
+newmtl grau
+Ns 0.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.181653 0.172872 0.167974
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd grau.png

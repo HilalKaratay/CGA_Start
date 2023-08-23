@@ -1,4 +1,3 @@
-package game
 
 import Collision
 import cga.exercise.components.camera.TronCamera
@@ -69,7 +68,6 @@ class Scene (private val WINDOW: GameWindow) {
 
 
     /**Shader**/
-
     var tronShader =ShaderProgram()
     var staticShader = tronShader
     val toonShader = ShaderProgram()
@@ -80,12 +78,9 @@ class Scene (private val WINDOW: GameWindow) {
 
     /**Kamera**/
     val camera = TronCamera()
+    val camerafirstperson = TronCamera()
 
-    /**Boden**/
-    val meshBoden: Mesh
-
-
-
+    /**Collision**/
     val spawnTiere =SpawnTiere()
     val listOfFixObjects = arrayListOf<Renderable>()
     private val fixObjectList = RenderableList(listOfFixObjects)
@@ -93,13 +88,15 @@ class Scene (private val WINDOW: GameWindow) {
     private val collisionChecker = Collision()
     var playerSpeed = 5f
 
-
+    /**Licht**/
     private val pointLight: PointLight
     private val pointLightList = mutableListOf<PointLight>()
 
     private val bikeSpotLight :SpotLight
     private val spotLightList = mutableListOf<SpotLight>()
 
+    /**Boden**/
+    val meshBoden: Mesh
 
     /**Boden Texturen**/
     var texEmitBoden: Texture2D
@@ -115,6 +112,8 @@ class Scene (private val WINDOW: GameWindow) {
         loadModel("assets/models/Baum_2/baum_2.obj", org.joml.Math.toRadians(0f), org.joml.Math.toRadians(90f), 0f)
     private val baum3 =
         loadModel("assets/models/Baum/Baum.obj", org.joml.Math.toRadians(-90f), org.joml.Math.toRadians(0f), 0f)
+    private val baum4 =
+        loadModel("assets/models/Baum_2/baum_2.obj", org.joml.Math.toRadians(0f), org.joml.Math.toRadians(90f), 0f)
     private val laterne =
         loadModel("assets/models/Laterne/Laterne.obj", org.joml.Math.toRadians(0f), org.joml.Math.toRadians(90f), 0f)
     private val laterne2 =
@@ -132,8 +131,15 @@ class Scene (private val WINDOW: GameWindow) {
     private val katze =
         loadModel("assets/models/katze/katze.obj", org.joml.Math.toRadians(0f), org.joml.Math.toRadians(180f), 0f)
     private val bank =
-        loadModel("assets/models/Bank/bank.obj", org.joml.Math.toRadians(0f), org.joml.Math.toRadians(180f), 0f)
-
+        loadModel("assets/models/Bank/bank.obj", org.joml.Math.toRadians(0f), org.joml.Math.toRadians(280f), 0f)
+    private val bank2 =
+        loadModel("assets/models/Bank2/bench2.obj", org.joml.Math.toRadians(0f), org.joml.Math.toRadians(180f), 0f)
+    private val brunnen =
+        loadModel("assets/models/Brunnen/Brunnen.obj", org.joml.Math.toRadians(0f), org.joml.Math.toRadians(180f), 0f)
+    private val busch =
+        loadModel("assets/models/Busch/Busch.obj", org.joml.Math.toRadians(0f), org.joml.Math.toRadians(0f), 0f)
+    private val busch2 =
+        loadModel("assets/models/Busch/Busch.obj", org.joml.Math.toRadians(0f), org.joml.Math.toRadians(0f), 0f)
     private val zaun=
         loadModel("assets/models/Zaun/13076_Gothic_Wood_Fence_Panel_v2_l3.obj",org.joml.Math.toRadians(-90f), org.joml.Math.toRadians(0f), 0f)
     private val zaun1=
@@ -158,9 +164,7 @@ class Scene (private val WINDOW: GameWindow) {
         loadModel("assets/models/Zaun/13076_Gothic_Wood_Fence_Panel_v2_l3.obj",org.joml.Math.toRadians(-90f), org.joml.Math.toRadians(360f), 0f)
     private val zaunhinten3=
         loadModel("assets/models/Zaun/13076_Gothic_Wood_Fence_Panel_v2_l3.obj",org.joml.Math.toRadians(-90f), org.joml.Math.toRadians(360f), 0f)
-
-
-
+    
 
     var lastX: Double = WINDOW.mousePos.xpos
 
@@ -169,9 +173,7 @@ class Scene (private val WINDOW: GameWindow) {
         /**Shader**/
         staticShader.shader("assets/shaders/third_vert.glsl", "assets/shaders/third_frag.glsl")
         staticShader.use()
-
         toonShader.shader("assets/shaders/toon_vert.glsl", "assets/shaders/toon_frag.glsl")
-
         skyboxShader.shader("assets/shaders/skybox_vert.glsl", "assets/shaders/skybox_frag.glsl")
         skyboxShader.use()
 
@@ -198,15 +200,12 @@ class Scene (private val WINDOW: GameWindow) {
                 "assets/textures/skybox/night/bottom.png",
                 "assets/textures/skybox/night/front.png",
                 "assets/textures/skybox/night/back.png"
-
             )
         )
 
         cubeMapTexture = cubeMap.loadCubeMap(facesCubeMap)
         //glBindTexture(GL_TEXTURE_CUBE_MAP,cubeMapTexture)
         cubeMapNightTexture =cubeMapNight.loadCubeMap(facesCubeMapNight)
-
-
 
         //initial opengl state
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f); GLError.checkThrow()
@@ -215,7 +214,6 @@ class Scene (private val WINDOW: GameWindow) {
         glCullFace(GL_BACK); GLError.checkThrow() // Es werden alle Dreiecke verworfen, die nach hinten zeigen
         glEnable(GL_DEPTH_TEST); GLError.checkThrow()
         glDepthFunc(GL_LEQUAL); GLError.checkThrow()
-
 
         /**load OBJ Object**/
         val attrPos = VertexAttribute(3, GL_FLOAT, 32, 0)
@@ -238,18 +236,24 @@ class Scene (private val WINDOW: GameWindow) {
         meshBoden = Mesh(objMeshBoden.vertexData, objMeshBoden.indexData, vertexAttributes, matBoden)
 
 
-        baum.translate(Vector3f(-6f, 0f, 0f))
-        baum2.translate(Vector3f(5f, 0f, -7f))
-        baum3.translate(Vector3f(10f, 0f, -3f))
-        laterne.translate(Vector3f(4f, 0f, 3f))
-        laterne2.translate(Vector3f(-7f,0f,-4f))
-        blume.translate(Vector3f(-17f, 0f, -5f))
+        baum.translate(Vector3f(5f, 0f, -0f))
+        baum2.translate(Vector3f(-6f, 0f, -1f))
+        baum3.translate(Vector3f(-8f, 0f, -13f))
+        baum4.translate(Vector3f(12f, 0f, -12f))
+        busch.translate(Vector3f(2.2f, 0f, -9.3f))
+        busch2.translate(Vector3f(-2.7f, 0f, -9.3f))
+        laterne.translate(Vector3f(-5f, 0f, -8f))
+        laterne2.translate(Vector3f(10f,0f,-7f))
+        blume.translate(Vector3f(-6f, 0f, -2f))
         stein.translate(Vector3f(-7f, 0f, 5f))
         stein2.translate(Vector3f(7f, 0f, 2f))
-        haus.translate(Vector3f(-0f, 0f, -5f))
+        haus.translate(Vector3f(0f, 0f, -9f))
         katze.translate(Vector3f(-3f, 0f, -3f))
         hund.translate(Vector3f(-1f, 0f, -3f))
-        bank.translate(Vector3f(-3.5f, 0f, -8f))
+        bank.translate(Vector3f(-8f, 0f, -8f))
+        bank2.translate(Vector3f(6f, 0f, -3f))
+        brunnen.translate(Vector3f(0f, 0f, -3f))
+
         zaun.translate(Vector3f(5f,0f,-10f))
         zaun1.translate(Vector3f(7f,0f,-10f))
         zaun2.translate(Vector3f(9f,0f,-10f))
@@ -277,19 +281,23 @@ class Scene (private val WINDOW: GameWindow) {
         zaunhinten3.scale(Vector3f(0.01f, 0.01f, 0.01f))
 
 
-
         listOfFixObjects.add(baum)
         listOfFixObjects.add(baum2)
         listOfFixObjects.add(baum3)
+        listOfFixObjects.add(baum4)
         listOfFixObjects.add(laterne)
         listOfFixObjects.add(laterne2)
         listOfFixObjects.add(blume)
-        listOfFixObjects.add(stein)
-        listOfFixObjects.add(stein2)
+        listOfFixObjects.add(busch)
+        listOfFixObjects.add(busch2)
+      //  listOfFixObjects.add(stein)
+      //  listOfFixObjects.add(stein2)
         listOfFixObjects.add(haus)
-        listOfFixObjects.add(katze)
-        listOfFixObjects.add(hund)
+      //  listOfFixObjects.add(katze)
+      //  listOfFixObjects.add(hund)
         listOfFixObjects.add(bank)
+        listOfFixObjects.add(bank2)
+        listOfFixObjects.add(brunnen)
         listOfFixObjects.add(zaun)
         listOfFixObjects.add(zaun1)
         listOfFixObjects.add(zaun2)
@@ -305,10 +313,16 @@ class Scene (private val WINDOW: GameWindow) {
 
 
         /**Kamera**/
-        camera.rotate(Math.toRadians(-20.0).toFloat(), 0.0f, 0.0f)
+        camera.rotate(Math.toRadians(-40.0).toFloat(), 0.0f, 0.0f)
         camera.translate(Vector3f(0.0f, 0.0f, 4.0f))
-        camera.parent = figur
 
+        camerafirstperson.rotate(Math.toRadians(-10.0).toFloat(),0f,0f)
+        camerafirstperson.translate(Vector3f(0f,2f,-1f))
+
+        camera.parent = figur
+        camerafirstperson.parent = figur
+
+        /**Licht**/
         pointLight = PointLight("pointLight[${pointLightList.size}]", Vector3f(0.0f, 10.0f, 0.0f), Vector3f(0.0f, 0.5f, 0.0f))
         pointLight.parent = figur
         pointLight.rotate(org.joml.Math.toRadians(-10.0f), 0.0f, 0.0f)
@@ -316,7 +330,6 @@ class Scene (private val WINDOW: GameWindow) {
         bikeSpotLight = SpotLight("spotLight", Vector3f(3.0f, 3.0f, 3.0f), Vector3f(4f, 0f, 3f), org.joml.Math.toRadians(20.0f), org.joml.Math.toRadians(30.0f))
         bikeSpotLight.parent =hund
         bikeSpotLight.rotate(org.joml.Math.toRadians(-10.0f), 0.0f, 0.0f)
-
 
         pointLightList.add(PointLight("pointLight[${pointLightList.size}]", Vector3f(0.0f, 2.0f, 2.0f), Vector3f(4f, 0f, 3f)))
         pointLightList.add(PointLight("pointLight[${pointLightList.size}]", Vector3f(2.0f, 0.0f, 0.0f), Vector3f(4f, 0f, 3f)))
@@ -328,14 +341,14 @@ class Scene (private val WINDOW: GameWindow) {
 
     fun render(dt: Float, t: Float) {
         glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
-       // setTimer(shaderWechsel)
+        // setTimer(shaderWechsel)
 
         /**Modell render**/
         figur.render(staticShader)
         meshBoden.render(staticShader)
         fixObjectList.renderListOfObjects(staticShader)
 
-       // pointLight.bind(staticShader)
+        // pointLight.bind(staticShader)
 
         for (i in spawnTiere.getRenderList()) {
             i?.render(staticShader)
@@ -361,7 +374,13 @@ class Scene (private val WINDOW: GameWindow) {
         glBindVertexArray(0);
         glDepthFunc(GL_LESS);
 
-        camera.bind(staticShader)
+        //camera.bind(staticShader)
+        if(WINDOW.getKeyState(GLFW_KEY_0)) {
+            camerafirstperson.bind(staticShader)
+        }
+        else {
+            camera.bind(staticShader)
+        }
     }
 
     fun update(dt: Float, t: Float) {
@@ -387,7 +406,7 @@ class Scene (private val WINDOW: GameWindow) {
 
         if (collisionChecker.checkCollision(figur, listOfFixObjects)) {
             collision = true
-           // playerSpeed = 1f
+            // playerSpeed = 1f
             // figur.translate(Vector3f(20.0f,0.0f,0.0f))
             println("collision detectet")
         }
