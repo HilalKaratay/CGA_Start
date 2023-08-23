@@ -35,6 +35,7 @@ class SpawnTiere() {
         //hund4.move(dt)
        // hund5.move(dt)
         katze1.move(dt)
+
         sheep.move(dt)
 
     }

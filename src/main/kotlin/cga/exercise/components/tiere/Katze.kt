@@ -8,7 +8,7 @@ import kotlin.random.Random
 
 class Katze (val spawnX: Float) : Tier (){
     override var isIdle = true
-    override var nextSpawn = Random.nextInt(0, 5).toFloat()
+    override var createSpawn = Random.nextInt(0, 5).toFloat()
     override val model: Renderable?
     override var radius = 2.3f
     override var speed = 0.4f
@@ -18,12 +18,12 @@ class Katze (val spawnX: Float) : Tier (){
 
     init {
         model = ModelLoader.loadModel("assets/models/katze/katze.obj", 0f, Math.toRadians(90.0).toFloat(), 0f)
-        setSpeed()
+        model?.translate((Vector3f(-3f,0f,-1f)))
 
     }
 
     override fun move(dt: Float) {
-       // model?.translate(Vector3f(-speed * dt, 1f, 0f))
+        model?.translate(Vector3f(-speed * dt, 0f, 0f))
     }
 
 
