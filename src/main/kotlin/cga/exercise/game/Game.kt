@@ -1,8 +1,9 @@
 package cga.exercise.game
 
 
+import Scene
 import cga.framework.GameWindow
-import game.Scene
+
 
 /*
   Created by Fabian on 16.09.2017.
