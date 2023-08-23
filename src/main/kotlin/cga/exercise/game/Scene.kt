@@ -118,12 +118,14 @@ class Scene (private val WINDOW: GameWindow) {
         loadModel("assets/models/Laterne/Laterne.obj", org.joml.Math.toRadians(0f), org.joml.Math.toRadians(90f), 0f)
     private val laterne2 =
         loadModel("assets/models/Laterne/Laterne.obj", org.joml.Math.toRadians(0f), org.joml.Math.toRadians(90f), 0f)
+    private val laterne3 =
+        loadModel("assets/models/Laterne/Laterne.obj", org.joml.Math.toRadians(0f), org.joml.Math.toRadians(90f), 0f)
     private val stein =
         loadModel("assets/models/Stein/stein.obj", org.joml.Math.toRadians(0f), org.joml.Math.toRadians(90f), 0f)
     private val stein2 =
         loadModel("assets/models/Stein2/stein2.obj", org.joml.Math.toRadians(0f), org.joml.Math.toRadians(90f), 0f)
     private val blume =
-        loadModel("assets/models/Blume/Blume.obj", org.joml.Math.toRadians(0f), org.joml.Math.toRadians(90f), 0f)
+        loadModel("assets/models/Blume/Blume.obj", org.joml.Math.toRadians(0f), org.joml.Math.toRadians(180f), 0f)
     private val haus =
         loadModel("assets/models/Haus/Haus.obj", org.joml.Math.toRadians(0f), org.joml.Math.toRadians(0f), 0f)
     private val hund =
@@ -164,10 +166,14 @@ class Scene (private val WINDOW: GameWindow) {
         loadModel("assets/models/Zaun/13076_Gothic_Wood_Fence_Panel_v2_l3.obj",org.joml.Math.toRadians(-90f), org.joml.Math.toRadians(360f), 0f)
     private val zaunhinten3=
         loadModel("assets/models/Zaun/13076_Gothic_Wood_Fence_Panel_v2_l3.obj",org.joml.Math.toRadians(-90f), org.joml.Math.toRadians(360f), 0f)
-    
+
 
     var lastX: Double = WINDOW.mousePos.xpos
 
+
+    private var MouseX = 0.0
+    private var MouseY = 0.0
+    private var firstMouseMove = true
 
     init {
         /**Shader**/
@@ -237,14 +243,15 @@ class Scene (private val WINDOW: GameWindow) {
 
 
         baum.translate(Vector3f(5f, 0f, -0f))
-        baum2.translate(Vector3f(-6f, 0f, -1f))
+        baum2.translate(Vector3f(-6.5f, 0f, -2.5f))
         baum3.translate(Vector3f(-8f, 0f, -13f))
         baum4.translate(Vector3f(12f, 0f, -12f))
         busch.translate(Vector3f(2.2f, 0f, -9.3f))
         busch2.translate(Vector3f(-2.7f, 0f, -9.3f))
         laterne.translate(Vector3f(-5f, 0f, -8f))
         laterne2.translate(Vector3f(10f,0f,-7f))
-        blume.translate(Vector3f(-6f, 0f, -2f))
+        laterne3.translate(Vector3f(-3f,0f,1.9f))
+        blume.translate(Vector3f(-5.5f, 0f, -2f))
         stein.translate(Vector3f(-7f, 0f, 5f))
         stein2.translate(Vector3f(7f, 0f, 2f))
         haus.translate(Vector3f(0f, 0f, -9f))
@@ -287,6 +294,7 @@ class Scene (private val WINDOW: GameWindow) {
         listOfFixObjects.add(baum4)
         listOfFixObjects.add(laterne)
         listOfFixObjects.add(laterne2)
+        listOfFixObjects.add(laterne3)
         listOfFixObjects.add(blume)
         listOfFixObjects.add(busch)
         listOfFixObjects.add(busch2)
@@ -418,11 +426,25 @@ class Scene (private val WINDOW: GameWindow) {
         if (key == GLFW_KEY_1 && action == GLFW_PRESS) shaderChange()
     }
 
-    fun onMouseMove(xpos: Double, ypos: Double) {
+  /*  fun onMouseMove(xpos: Double, ypos: Double) {
         camera.rotateAroundPoint(0f, (lastX - xpos).toFloat() * 0.002f, 0f, Vector3f(0f, 0f, 0f))
         lastX = xpos
 
 
+    }*/
+
+    fun onMouseMove(xpos: Double, ypos: Double) {
+        if (!firstMouseMove) {
+            val yawAngle = (xpos - MouseX).toFloat() * 0.002f
+            if (!WINDOW.getKeyState(GLFW_KEY_LEFT_ALT)) {
+                figur.rotate(0.0f, yawAngle, 0.0f)
+            }
+            else{
+                camera.rotateAroundPoint(0.0f, yawAngle, 0.0f, Vector3f(0.0f, 0.0f, 0.0f))
+            }
+        } else firstMouseMove = false
+        MouseX = xpos
+        MouseY = ypos
     }
 
     //Zeitberchnen für shaderwechsel
