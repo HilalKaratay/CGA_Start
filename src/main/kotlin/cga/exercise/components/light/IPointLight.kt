@@ -5,5 +5,5 @@ import shader.ShaderProgram
 
 
 interface IPointLight {
-    fun bind(shaderProgram: ShaderProgram, name:String)
-}
+        fun bind(shaderProgram: ShaderProgram)
+    }

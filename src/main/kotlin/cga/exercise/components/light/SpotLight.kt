@@ -1,15 +1,19 @@
 package cga.exercise.components.light
 
-import org.joml.Math
+import org.joml.Matrix3f
 import org.joml.Matrix4f
+import org.joml.Vector2f
 import org.joml.Vector3f
-
 import shader.ShaderProgram
 
-class SpotLight(pos : Vector3f, col : Vector3f, attenuation : Vector3f, private val innerAngle : Float, private val outerAngle : Float) : PointLight(pos, col,attenuation), ISpotLight {
+class SpotLight(private val name: String, lightColor: Vector3f, position: Vector3f, var innerCone: Float, var outerCone: Float) : PointLight(name, lightColor, position), ISpotLight {
 
+    init {
+    }
 
     override fun bind(shaderProgram: ShaderProgram, viewMatrix: Matrix4f) {
-        TODO("Not yet implemented")
+        super.bind(shaderProgram)
+        shaderProgram.setUniform("$name.Cone", Vector2f(innerCone, outerCone))
+        shaderProgram.setUniform("$name.Direction", Vector3f(getWorldZAxis()).negate().mul(Matrix3f(viewMatrix)))
     }
 }

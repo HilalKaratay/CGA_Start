@@ -3,17 +3,24 @@ package cga.exercise.components.light
 import cga.exercise.components.geometry.Transformable
 import org.joml.Vector3f
 import shader.ShaderProgram
+import java.awt.Color
 
-open class PointLight(var pos : Vector3f, var col : Vector3f, var attenuation : Vector3f) : IPointLight, Transformable() {
+open class PointLight(private val name: String, var lightColor: Vector3f, position: Vector3f) : Transformable(), IPointLight {
+
+    private  var attenuation= Vector3f(1.0f,0f,0f)
+
+    public fun Light(position: Vector3f,color: Color){
+        this.getPosition()
+    }
+
     init {
-        translateGlobal(pos)
-    }
-    override fun bind(shaderProgram: ShaderProgram, name: String) {
-        val position = getWorldPosition()
-        shaderProgram.setUniform(name + "Position", position.x, position.y, position.z)
-        shaderProgram.setUniform(name + "Color", col.x, col.y, col.z)
-        shaderProgram.setUniform(name + "AttenuationFactors", attenuation.x, attenuation.y, attenuation.z)
+        translate(position)
     }
 
 
+
+    override fun bind(shaderProgram: ShaderProgram) {
+        shaderProgram.setUniform("$name.Color", lightColor)
+        shaderProgram.setUniform("$name.Position", getWorldPosition())
+    }
 }

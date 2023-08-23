@@ -1,6 +1,7 @@
 
 import cga.exercise.components.geometry.Renderable
 import cga.exercise.components.geometry.Transformable
+import cga.exercise.components.tiere.SpawnTiere
 
 class Collision {
 
@@ -22,4 +23,5 @@ class Collision {
         }
         return false
     }
+
 }

@@ -4,17 +4,28 @@ import org.joml.Matrix4f
 import org.joml.Vector3f
 
 open class Transformable(private var modelMatrix: Matrix4f = Matrix4f(), var parent: Transformable? = null) {
-    /**
-     * Returns copy of object model matrix
-     * @return modelMatrix
-     */
+
+
+
+    var scaleFactor=1f
+    var lastPosition=Vector3f(0f,0f,0f)
+
     fun getModelMatrix(): Matrix4f {
         return Matrix4f(modelMatrix)
     }
 
 
+    fun setLastPosition(){
+        lastPosition=getWorldPosition()
+    }
 
+    fun resetTransformations() {
+        val m=Matrix4f()
+        modelMatrix.set(m)
+        scaleFactor=1f
+        setLastPosition()
 
+    }
 
     fun translateGlobal(deltaPos: Vector3f) {
         val translation_matrix = Matrix4f().translate(deltaPos)
