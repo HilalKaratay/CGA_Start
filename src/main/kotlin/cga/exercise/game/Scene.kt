@@ -71,6 +71,7 @@ class Scene (private val WINDOW: GameWindow) {
     var tronShader =ShaderProgram()
     var staticShader = tronShader
     val toonShader = ShaderProgram()
+    val secondShader = ShaderProgram()
     val skyboxShader = ShaderProgram()
 
     private var time = 6f
@@ -179,6 +180,7 @@ class Scene (private val WINDOW: GameWindow) {
         /**Shader**/
         staticShader.shader("assets/shaders/third_vert.glsl", "assets/shaders/third_frag.glsl")
         staticShader.use()
+        secondShader.shader("assets/shaders/second_vert.glsl", "assets/shaders/second_frag.glsl")
         toonShader.shader("assets/shaders/toon_vert.glsl", "assets/shaders/toon_frag.glsl")
         skyboxShader.shader("assets/shaders/skybox_vert.glsl", "assets/shaders/skybox_frag.glsl")
         skyboxShader.use()
@@ -431,12 +433,6 @@ class Scene (private val WINDOW: GameWindow) {
         if (key == GLFW_KEY_1 && action == GLFW_PRESS) shaderChange()
     }
 
-  /*  fun onMouseMove(xpos: Double, ypos: Double) {
-        camera.rotateAroundPoint(0f, (lastX - xpos).toFloat() * 0.002f, 0f, Vector3f(0f, 0f, 0f))
-        lastX = xpos
-
-
-    }*/
 
     fun onMouseMove(xpos: Double, ypos: Double) {
         if (!firstMouseMove) {
