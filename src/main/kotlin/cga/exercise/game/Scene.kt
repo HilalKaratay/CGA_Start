@@ -411,8 +411,7 @@ class Scene (private val WINDOW: GameWindow) {
 
         if (collisionChecker.checkCollision(figur, listOfFixObjects)) {
             collision = true
-            figur.rotate(org.joml.Math.toRadians(-90f),0f,0f)
-            //playerSpeed = 0.2f
+            //playerSpeed = 0.2f //verlangsamt den Spieler
             //figur.translate(figur.getWorldPosition().mul(-1f)) Bringt die Figur auf Anfangsposition
             // playerSpeed = 1f
             // figur.translate(Vector3f(20.0f,0.0f,0.0f))
