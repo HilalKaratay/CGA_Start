@@ -1,5 +1,4 @@
 
-import Collision
 import cga.exercise.components.camera.TronCamera
 import cga.exercise.components.geometry.*
 import cga.exercise.components.light.PointLight
@@ -22,7 +21,6 @@ import texture.Texture2D
 
 
 class Scene (private val WINDOW: GameWindow) {
-
 
     /**Skybox / Cubemap**/
     // Define Vertices and Indices of Cubemap
@@ -66,7 +64,6 @@ class Scene (private val WINDOW: GameWindow) {
 
     private var fogColour = 0
 
-
     /**Shader**/
     var tronShader =ShaderProgram()
     var staticShader = tronShader
@@ -75,7 +72,6 @@ class Scene (private val WINDOW: GameWindow) {
     val skyboxShader = ShaderProgram()
 
     private var time = 6f
-
 
     /**Kamera**/
     val camera = TronCamera()
@@ -170,7 +166,6 @@ class Scene (private val WINDOW: GameWindow) {
 
 
     var lastX: Double = WINDOW.mousePos.xpos
-
 
     private var MouseX = 0.0
     private var MouseY = 0.0
@@ -381,8 +376,8 @@ class Scene (private val WINDOW: GameWindow) {
         glBindVertexArray(cubeMap.skyboxVAO)
         glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0)
         bindTextures()
-        glBindVertexArray(0);
-        glDepthFunc(GL_LESS);
+        glBindVertexArray(0)
+        glDepthFunc(GL_LESS)
 
         //camera.bind(staticShader)
         if(WINDOW.getKeyState(GLFW_KEY_0)) {
@@ -430,7 +425,9 @@ class Scene (private val WINDOW: GameWindow) {
 
 
     fun onKey(key: Int, scancode: Int, action: Int, mode: Int) {
-        if (key == GLFW_KEY_1 && action == GLFW_PRESS) shaderChange()
+        if (key == GLFW_KEY_1 && action == GLFW_PRESS) shaderToTronShaderChange()
+        if(key == GLFW_KEY_2 && action == GLFW_PRESS) shadertoToonShaderChange()
+        if(key == GLFW_KEY_3 && action == GLFW_PRESS) shaderToSecondShaderChange()
     }
 
 
@@ -469,21 +466,35 @@ class Scene (private val WINDOW: GameWindow) {
 
     }
 
-    fun shaderChange(){
+
+    fun shaderToTronShaderChange(){
+        if (staticShader== toonShader|| staticShader==secondShader){
+            staticShader=tronShader
+            println("changed to TronShader")
+        }else{
+            staticShader= toonShader
+            println("changed to ToonShader")
+        }
+    }
+    fun shadertoToonShaderChange(){
         if (staticShader== tronShader){
-            staticShader=toonShader
-            println("changed to Toonshader")
+            staticShader= toonShader
+            println("changed to ToonShader")
         }else{
             staticShader= tronShader
-            println("changed to Tronshader")
+            println("changed to TronShader")
         }
     }
 
-    fun skyboxChange(){
-
+    fun shaderToSecondShaderChange() {
+        if (staticShader == toonShader || staticShader == tronShader) {
+            staticShader = secondShader
+            println("changed to SecondShader")
+        } else {
+            staticShader = tronShader
+            println("changed to TronShader")
+        }
     }
-
-
     fun cleanup() {}
 
 
