@@ -1,13 +1,6 @@
 package cga.exercise.components.geometry
 
-
-
 import shader.ShaderProgram
-
-/**
- * Extends Transformable such that the object can render Mesh objects transformed by Transformable
- */
-
 
 class Renderable(val meshes: MutableList<Mesh> = mutableListOf()) : Transformable(parent = null), IRenderable {
 

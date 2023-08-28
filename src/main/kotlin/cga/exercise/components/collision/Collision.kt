@@ -7,7 +7,6 @@ class Collision {
 
     fun checkCollision(t1: Transformable, box: ArrayList<Renderable> ): Boolean{
         return checkCollisionBox(t1, box)
-
     }
 
     fun checkCollisionBox(t1: Transformable, tList: ArrayList<Renderable>): Boolean {

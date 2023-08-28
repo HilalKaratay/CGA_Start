@@ -19,7 +19,6 @@ import org.lwjgl.opengl.GL13
 import shader.ShaderProgram
 import texture.Texture2D
 
-
 class Scene (private val WINDOW: GameWindow) {
 
     /**Skybox / Cubemap**/
@@ -238,7 +237,6 @@ class Scene (private val WINDOW: GameWindow) {
         val matBoden = Material(texDiffBoden, texEmitBoden, texSpecBoden, 60.0f, Vector2f(64F, 64F))
         meshBoden = Mesh(objMeshBoden.vertexData, objMeshBoden.indexData, vertexAttributes, matBoden)
 
-
         baum.translate(Vector3f(5f, 0f, -0f))
         baum2.translate(Vector3f(-6.5f, 0f, -2.5f))
         baum3.translate(Vector3f(-8f, 0f, -13f))
@@ -359,7 +357,6 @@ class Scene (private val WINDOW: GameWindow) {
             i?.render(staticShader)
         }
 
-
         for (pointLight in pointLightList) {
             pointLight.bind(staticShader)
         }
@@ -389,8 +386,8 @@ class Scene (private val WINDOW: GameWindow) {
     }
 
     fun update(dt: Float, t: Float) {
-        spawnTiere.move(dt,t)
-        spawnTiere.spawn(t)
+        spawnTiere.move(dt,)
+        spawnTiere.spawn()
 
         if (WINDOW.getKeyState(GLFW_KEY_W)) {
             figur.translate(Vector3f(0.0f, 0.0f, -playerSpeed * dt))
@@ -398,7 +395,6 @@ class Scene (private val WINDOW: GameWindow) {
         if (WINDOW.getKeyState(GLFW_KEY_S)) {
             figur.translate(Vector3f(0.0f, 0.0f, playerSpeed * dt))
         }
-
         //links
         if (WINDOW.getKeyState(GLFW_KEY_A)) {
             figur.translate(Vector3f(-playerSpeed * dt, 0.0f, 0.0f))
@@ -408,7 +404,6 @@ class Scene (private val WINDOW: GameWindow) {
             figur.translate(Vector3f(playerSpeed * dt, 0.0f, 0.0f))
         }
 
-
         if (collisionChecker.checkCollision(figur, listOfFixObjects)) {
             collision = true
             //playerSpeed = 0.2f //verlangsamt den Spieler
@@ -417,9 +412,6 @@ class Scene (private val WINDOW: GameWindow) {
             // figur.translate(Vector3f(20.0f,0.0f,0.0f))
             println("collision detectet")
         }
-
-
-
     }
 
 
@@ -462,7 +454,6 @@ class Scene (private val WINDOW: GameWindow) {
         }else {
             nightTexture = cubeMapNightTexture
         }
-
     }
 
 
